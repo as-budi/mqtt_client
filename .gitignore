@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Django
+.env
+*.sqlite3
+staticfiles/
+media/
+private_media/
+*.log
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Berkas sementara Claude
+.claude-tmp/
+Claude outputs/
