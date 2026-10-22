@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}MQTT Client{% endblock %}
+
+{% block content %}
+{# Halaman depan untuk pengguna yang belum login. #}
+<div class="hero">
+  <div class="d-flex justify-content-center mb-3">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 7h10M7 7l3-3M7 7l3 3"/><path d="M17 17H7M17 17l-3-3M17 17l-3 3"/>
+      </svg>
+    </span>
+  </div>
+  <h1 class="h2 mb-2">Test MQTT from your browser</h1>
+  <p class="text-muted mb-4">Connect to the IoT Platform broker or any public broker, subscribe to topics,
+    and publish messages. Your connections are saved with your IoT Platform account.</p>
+  <div class="d-flex flex-wrap justify-content-center gap-2">
+    <a class="btn btn-primary btn-lg" href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in with IoT Platform</a>
+    <a class="btn btn-outline-secondary btn-lg" href="{% url 'accounts:login' %}?signup=1">Create an account</a>
+  </div>
+  <p class="small text-muted mt-4 mb-0">You sign in on IoT Platform; this app never sees your password.</p>
+</div>
+{% endblock %}

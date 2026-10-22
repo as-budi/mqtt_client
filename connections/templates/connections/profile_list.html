@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Connections · MQTT Client{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-0">Connections</h1>
+    <p class="text-muted mb-0">Saved broker settings. Passwords are never stored on the server.</p>
+  </div>
+  {# Profil baru: kosong, atau dari templat (connections/presets.py). #}
+  <div class="btn-group">
+    <a class="btn btn-primary" href="{% url 'connections:create' %}">New connection</a>
+    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
+            aria-expanded="false" aria-label="Start from a template"></button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><h6 class="dropdown-header">Start from a template</h6></li>
+      {% for key, preset in presets.items %}
+      <li><a class="dropdown-item" href="{% url 'connections:create' %}?preset={{ key }}">{{ preset.label }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for profile in profiles %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card profile-card color-{{ profile.color }} h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex align-items-start justify-content-between gap-2">
+          <h2 class="h5 mb-1">{{ profile.name }}</h2>
+          {# Direct = browser langsung ke broker; Relay = lewat server (tahap M4). #}
+          {% if profile.route == "direct" %}
+          <span class="badge text-bg-light border" title="The browser connects to the broker directly">Direct</span>
+          {% else %}
+          <span class="badge text-bg-warning" title="TCP brokers are reached through the relay (coming in M4)">Relay</span>
+          {% endif %}
+        </div>
+        <p class="profile-url small font-monospace mb-2">{{ profile.url }}</p>
+        <ul class="list-unstyled small text-muted mb-3">
+          <li>{{ profile.get_protocol_version_display }}{% if profile.username %} · user <code>{{ profile.username|truncatechars:24 }}</code>{% endif %}{% if profile.uses_tls %} · TLS{% endif %}</li>
+          <li>{% with count=profile.subscriptions.all|length %}{{ count }} saved subscription{{ count|pluralize }}{% endwith %}{% if profile.will_topic %} · Last Will{% endif %}</li>
+        </ul>
+        <div class="mt-auto d-flex flex-wrap gap-2">
+          {# Tombol Connect hadir di tahap M3. #}
+          <button type="button" class="btn btn-sm btn-success" disabled title="Coming in the next version">Connect</button>
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'connections:edit' profile.pk %}">Edit</a>
+          <form method="post" action="{% url 'connections:duplicate' profile.pk %}">{% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Duplicate</button>
+          </form>
+          <a class="btn btn-sm btn-outline-danger ms-auto" href="{% url 'connections:delete' profile.pk %}">Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="card"><div class="card-body text-center py-5">
+      <h2 class="h5">No connections yet</h2>
+      <p class="text-muted">Start with a public test broker, or with the IoT Platform broker.</p>
+      <div class="d-flex flex-wrap justify-content-center gap-2">
+        {% for key, preset in presets.items %}
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'connections:create' %}?preset={{ key }}">{{ preset.label }}</a>
+        {% endfor %}
+      </div>
+    </div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

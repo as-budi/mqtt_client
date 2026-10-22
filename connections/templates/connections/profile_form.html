@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if creating %}New connection{% else %}{{ profile.name }}{% endif %} · MQTT Client{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'connections:list' %}">Connections</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{% if creating %}New{% else %}{{ profile.name }}{% endif %}</li>
+</ol></nav>
+<h1 class="h3 mb-3">{% if creating %}New connection{% if preset %} <span class="text-muted fw-normal">· {{ preset.label }}</span>{% endif %}{% else %}Edit connection{% endif %}</h1>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card mb-3"><div class="card-body">
+        <div class="form-section-title mb-3">Broker</div>
+        <div class="row g-3">
+          <div class="col-sm-8">{% include "includes/field.html" with field=form.name wrapper="mb-0" %}</div>
+          <div class="col-sm-4">{% include "includes/field.html" with field=form.color wrapper="mb-0" %}</div>
+          <div class="col-sm-5">{% include "includes/field.html" with field=form.scheme wrapper="mb-0" %}</div>
+          <div class="col-sm-7">{% include "includes/field.html" with field=form.host wrapper="mb-0" %}</div>
+          <div class="col-sm-5">{% include "includes/field.html" with field=form.port wrapper="mb-0" %}</div>
+          <div class="col-sm-7">{% include "includes/field.html" with field=form.path wrapper="mb-0" field_id="path-field" %}</div>
+        </div>
+        {# Diisi connection_form.js: alamat lengkap dan jalur Direct/Relay. #}
+        <div class="small mt-3">
+          <span class="text-muted">Address:</span> <code id="url-preview"></code>
+          <div id="relay-note" class="alert alert-warning small mt-2 mb-0 d-none">
+            Browsers cannot open TCP connections, so <code>mqtt://</code> and <code>mqtts://</code> brokers are reached
+            through the relay on this server. The relay is coming in a later version; until then use a broker
+            with a WebSocket port (<code>wss://</code>).
+          </div>
+        </div>
+      </div></div>
+
+      <div class="card mb-3"><div class="card-body">
+        <div class="form-section-title mb-3">Login and session</div>
+        <div class="row g-3">
+          <div class="col-sm-6">{% include "includes/field.html" with field=form.username wrapper="mb-0" %}</div>
+          <div class="col-sm-6">
+            <label class="form-label">Password</label>
+            <input type="text" class="form-control" value="Asked when you connect" disabled>
+            <div class="form-text">Never stored on the server.</div>
+          </div>
+          <div class="col-sm-6">{% include "includes/field.html" with field=form.client_id_prefix wrapper="mb-0" %}</div>
+          <div class="col-sm-3">{% include "includes/field.html" with field=form.protocol_version wrapper="mb-0" %}</div>
+          <div class="col-sm-3">{% include "includes/field.html" with field=form.keepalive wrapper="mb-0" %}</div>
+          <div class="col-12">{% include "includes/field.html" with field=form.clean_start wrapper="mb-0" %}</div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card mb-3"><div class="card-body">
+        <div class="form-section-title mb-3">Last Will (optional)</div>
+        {% include "includes/field.html" with field=form.will_topic %}
+        {% include "includes/field.html" with field=form.will_payload %}
+        <div class="row g-3">
+          <div class="col-7">{% include "includes/field.html" with field=form.will_qos wrapper="mb-0" %}</div>
+          <div class="col-5 pt-sm-4">{% include "includes/field.html" with field=form.will_retain wrapper="mb-0" %}</div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card mb-3"><div class="card-body">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <div class="form-section-title">Saved subscriptions</div>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="add-subscription">Add subscription</button>
+    </div>
+    <p class="small text-muted">Subscribed automatically every time this connection opens.
+      <code>+</code> matches one level, <code>#</code> matches all remaining levels.</p>
+    {{ formset.management_form }}
+    {% for error in formset.non_form_errors %}<div class="alert alert-danger small">{{ error }}</div>{% endfor %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Topic filter</th><th>QoS</th><th>Color</th><th class="text-center">Muted</th><th class="text-center">Remove</th></tr></thead>
+        <tbody id="subscription-rows">
+          {% for sub in formset %}{% include "connections/subscription_row.html" %}{% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {# Templat baris baru: __prefix__ diganti nomor urut oleh connection_form.js. #}
+    <template id="subscription-template">{% include "connections/subscription_row.html" with sub=formset.empty_form %}</template>
+  </div></div>
+
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">{% if creating %}Create connection{% else %}Save{% endif %}</button>
+    <a class="btn btn-outline-secondary" href="{% url 'connections:list' %}">Cancel</a>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/connection_form.js' %}"></script>
+{% endblock %}

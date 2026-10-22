@@ -1,0 +1,12 @@
+{# Satu baris langganan tersimpan (dipakai untuk baris yang ada dan templat baris baru). #}
+<tr class="subscription-row">
+  <td>
+    {% for hidden in sub.hidden_fields %}{{ hidden }}{% endfor %}
+    {{ sub.topic_filter }}
+    {% for error in sub.topic_filter.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+  </td>
+  <td style="width: 11rem">{{ sub.qos }}</td>
+  <td style="width: 8rem">{{ sub.color }}</td>
+  <td class="text-center" style="width: 5rem">{{ sub.muted }}</td>
+  <td class="text-center" style="width: 5rem">{{ sub.DELETE }}</td>
+</tr>
