@@ -889,7 +889,12 @@
     stat.last = text === null ? toHex(message.bytes.slice(0, 32)) : text;
     stat.time = message.time;
     topicStats.set(message.topic, stat);
-    if (text === null || message.direction !== "in") return;
+    if (text === null) return;
+    // Pesan yang DIKIRIM juga digambar (mis. telemetri simulasi device: device tidak boleh
+    // subscribe ke topik telemetrinya sendiri). Bila topik itu juga dilanggan, pesannya akan
+    // kembali sebagai pesan masuk; yang keluar dilewati supaya titiknya tidak ganda.
+    const echo = message.direction === "out" ? subscriptionFor(message.topic) : null;
+    if (echo && echo.state !== "refused") return;
     // Angka polos ("23.5") atau field angka di JSON ({"temperature": 23.5}, satu tingkat).
     const number = Number(text.trim());
     if (text.trim() !== "" && Number.isFinite(number)) { addPoint(message.topic, number, message.time); return; }
@@ -968,7 +973,7 @@
   function renderCharts() {
     const container = $("charts");
     container.textContent = "";
-    if (!series.size) { container.append(note("Numbers in received messages appear here, e.g. 23.5 or {\"temperature\": 23.5}.")); return; }
+    if (!series.size) { container.append(note("Numbers in received and published messages appear here, e.g. 23.5 or {\"temperature\": 23.5}.")); return; }
     const svgNs = "http://www.w3.org/2000/svg";
     for (const { label, points } of series.values()) {
       const values = points.map((p) => p.v);

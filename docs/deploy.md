@@ -131,7 +131,7 @@ sudo chmod 711 /srv/mqttc      # Nginx boleh MELEWATI folder ini menuju staticfi
 sudo sh -c 'cp -v /srv/mqttc/app/deploy/systemd/mqttc* /etc/systemd/system/'
 sudo systemctl daemon-reload
 sudo systemctl start mqttc-web
-curl -sI -H "Host: mqtt.reslab-csub.cloud" http://127.0.0.1:8002/ | head -1     # HTTP/1.1 200 OK
+curl -s -o /dev/null -w "%{http_code}\n" -H "Host: mqtt.reslab-csub.cloud" http://127.0.0.1:8002/     # 200
 ```
 
 Admin Django (`/admin/`) jarang diperlukan: pengguna dibuat otomatis saat login pertama dari

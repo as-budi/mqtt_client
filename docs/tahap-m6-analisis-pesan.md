@@ -19,7 +19,7 @@ Di atas daftar pesan ada tiga tab:
 |---|---|
 | List | daftar pesan seperti tahap M3 (filter, arah, tampilan payload, Pause) |
 | Topics | pohon topik: setiap level `/` menjadi cabang, dengan jumlah pesan (masuk dan keluar) dan nilai terakhir di daun. Klik nama → kembali ke List dengan filter topik itu |
-| Charts | satu grafik untuk setiap deret angka: payload angka (`23.5`) atau kunci angka/boolean di objek JSON (`{"temperature": 23.5}` → `topik › temperature`). Tampil nilai terakhir, min, max, jumlah titik |
+| Charts | satu grafik untuk setiap deret angka: payload angka (`23.5`) atau kunci angka/boolean di objek JSON (`{"temperature": 23.5}` → `topik › temperature`). Pesan masuk **dan** pesan yang dikirim halaman ini ikut digambar, sehingga telemetri dari simulasi device juga tampil (device tidak boleh subscribe ke topik telemetrinya sendiri). Pesan kirim ke topik yang juga dilanggan tidak dihitung dua kali. Tampil nilai terakhir, min, max, jumlah titik. Filter pesan tidak berlaku untuk tab ini |
 
 Batas di memori browser: 2000 pesan terakhir untuk ekspor (List menampilkan 500 terakhir yang lolos filter), 120 titik terakhir per grafik.
 Tab yang terbuka diperbarui otomatis saat pesan datang (paling sering sekali per frame layar).

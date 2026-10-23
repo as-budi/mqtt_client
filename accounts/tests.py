@@ -63,6 +63,7 @@ class LoginTests(TestCase):
         response = self.client.get(reverse("accounts:welcome"))
         self.assertContains(response, "Sign in with IoT Platform")
         self.assertContains(response, reverse("accounts:login") + "?signup=1")
+        self.assertEqual(self.client.head(reverse("accounts:welcome")).status_code, 200)   # curl -I
 
     def test_pages_need_login(self):
         response = self.client.get(reverse("connections:list"))

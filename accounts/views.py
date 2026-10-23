@@ -16,7 +16,7 @@ from django.contrib.auth import login, logout
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_safe
 
 from . import platform
 from .oidc import platform_client, sync_user
@@ -33,7 +33,8 @@ def safe_next(request, url):
     return ""
 
 
-@require_GET
+# require_safe = GET dan HEAD: pemeriksaan seperti `curl -I` dan pemantau uptime memakai HEAD.
+@require_safe
 def welcome(request):
     if request.user.is_authenticated:
         return redirect(settings.LOGIN_REDIRECT_URL)
