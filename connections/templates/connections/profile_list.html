@@ -8,6 +8,11 @@
     <h1 class="h3 mb-0">Connections</h1>
     <p class="text-muted mb-0">Saved broker settings. Passwords are never stored on the server.</p>
   </div>
+  <div class="d-flex flex-wrap gap-2">
+  {% if user.platform_sub %}
+  {# Profil yang login sebagai device milik pengguna di IoT Platform. #}
+  <a class="btn btn-outline-success" href="{% url 'connections:platform' %}">From IoT Platform</a>
+  {% endif %}
   {# Profil baru: kosong, atau dari templat (connections/presets.py). #}
   <div class="btn-group">
     <a class="btn btn-primary" href="{% url 'connections:create' %}">New connection</a>
@@ -18,7 +23,11 @@
       {% for key, preset in presets.items %}
       <li><a class="dropdown-item" href="{% url 'connections:create' %}?preset={{ key }}">{{ preset.label }}</a></li>
       {% endfor %}
+      <li><hr class="dropdown-divider"></li>
+      {# "Others": form kosong untuk broker lain yang tidak ada di daftar templat. #}
+      <li><a class="dropdown-item" href="{% url 'connections:create' %}?preset=other">Others (any broker)</a></li>
     </ul>
+  </div>
   </div>
 </div>
 
@@ -33,7 +42,7 @@
           {% if profile.route == "direct" %}
           <span class="badge text-bg-light border" title="The browser connects to the broker directly">Direct</span>
           {% else %}
-          <span class="badge text-bg-warning" title="TCP brokers are reached through the relay (coming in M4)">Relay</span>
+          <span class="badge text-bg-warning" title="TCP broker: the browser connects through the relay on this server">Relay</span>
           {% endif %}
         </div>
         <p class="profile-url small font-monospace mb-2">{{ profile.url }}</p>
@@ -42,8 +51,7 @@
           <li>{% with count=profile.subscriptions.all|length %}{{ count }} saved subscription{{ count|pluralize }}{% endwith %}{% if profile.will_topic %} · Last Will{% endif %}</li>
         </ul>
         <div class="mt-auto d-flex flex-wrap gap-2">
-          {# Tombol Connect hadir di tahap M3. #}
-          <button type="button" class="btn btn-sm btn-success" disabled title="Coming in the next version">Connect</button>
+          <a class="btn btn-sm btn-success" href="{% url 'connections:session' profile.pk %}">Open</a>
           <a class="btn btn-sm btn-outline-secondary" href="{% url 'connections:edit' profile.pk %}">Edit</a>
           <form method="post" action="{% url 'connections:duplicate' profile.pk %}">{% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-secondary">Duplicate</button>
@@ -62,6 +70,8 @@
         {% for key, preset in presets.items %}
         <a class="btn btn-outline-primary btn-sm" href="{% url 'connections:create' %}?preset={{ key }}">{{ preset.label }}</a>
         {% endfor %}
+        <a class="btn btn-outline-secondary btn-sm" href="{% url 'connections:create' %}?preset=other">Others</a>
+        {% if user.platform_sub %}<a class="btn btn-outline-success btn-sm" href="{% url 'connections:platform' %}">A device from IoT Platform</a>{% endif %}
       </div>
     </div></div>
   </div>

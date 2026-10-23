@@ -36,6 +36,10 @@ class PlatformUnavailable(Exception):
     """Platform tidak bisa dihubungi atau menjawab error server."""
 
 
+class PlatformForbidden(Exception):
+    """Token sah, tetapi izin (scope) tidak cukup: pengguna belum menyetujui scope baru."""
+
+
 def save_token(request, token):
     expires_at = token.get("expires_at") or int(time.time()) + int(token.get("expires_in", 0))
     old = request.session.get(SESSION_KEY, {})
@@ -136,6 +140,8 @@ def api_get(request, path):
         raise PlatformUnavailable(str(exc)) from exc
     if response.status_code == 401:
         raise PlatformSessionEnded("The access token was refused.")
+    if response.status_code == 403:
+        raise PlatformForbidden(response.text[:200])
     if response.status_code >= 500:
         raise PlatformUnavailable(f"HTTP {response.status_code}")
     response.raise_for_status()

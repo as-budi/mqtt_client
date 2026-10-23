@@ -407,7 +407,7 @@ Domain platform kini `iot.reslab-csub.cloud`. Yang berkaitan dengan rancangan in
 - `ROOT_CA` di firmware tidak berubah (tetap ISRG Root X1), tetapi `MQTT_HOST`/`SERVER` di
   firmware harus memakai domain baru;
 - redirect URI OIDC dan alamat API di aplikasi client memakai domain baru;
-- `docs/deploy-lightsail.md` (repo platform) masih memakai contoh `iot.contoh.my.id`, jadi tidak perlu diubah.
+- `docs/deploy-vps.md` (repo platform) masih memakai contoh `iot.contoh.my.id`, jadi tidak perlu diubah.
 
 ---
 

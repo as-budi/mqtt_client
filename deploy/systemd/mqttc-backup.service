@@ -1,0 +1,21 @@
+# Backup harian database MQTT Client (deploy/scripts/backup.sh), disimpan 14 hari.
+[Unit]
+Description=MQTT Client: daily backup
+
+[Service]
+Type=oneshot
+User=mqttc
+Group=mqttc
+ExecStart=/srv/mqttc/app/deploy/scripts/backup.sh
+ReadWritePaths=/srv/mqttc/backups
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX

@@ -1,5 +1,6 @@
 """Form profil koneksi dan formset langganan tersimpan."""
 import re
+import ssl
 
 from django import forms
 from django.conf import settings
@@ -31,9 +32,11 @@ class ConnectionProfileForm(BootstrapMixin, forms.ModelForm):
         fields = [
             "name", "color", "scheme", "host", "port", "path",
             "client_id_prefix", "username", "protocol_version", "keepalive", "clean_start",
-            "will_topic", "will_payload", "will_qos", "will_retain",
+            "will_topic", "will_payload", "will_qos", "will_retain", "ca_pem",
         ]
-        widgets = {"will_payload": forms.Textarea(attrs={"rows": 2})}
+        widgets = {"will_payload": forms.Textarea(attrs={"rows": 2}),
+                   "ca_pem": forms.Textarea(attrs={"rows": 4, "class": "form-control font-monospace small",
+                                                   "placeholder": "-----BEGIN CERTIFICATE-----"})}
 
     def __init__(self, *args, owner, **kwargs):
         super().__init__(*args, **kwargs)
@@ -69,9 +72,24 @@ class ConnectionProfileForm(BootstrapMixin, forms.ModelForm):
             raise forms.ValidationError("Keep alive can be at most 65535 seconds.")
         return keepalive
 
+    def clean_ca_pem(self):
+        """Harus sertifikat PEM yang bisa dibaca modul ssl (bukan kunci privat)."""
+        pem = self.cleaned_data["ca_pem"].strip()
+        if not pem:
+            return ""
+        if "PRIVATE KEY" in pem:
+            raise forms.ValidationError("This is a private key. Paste only the CA certificate (public).")
+        try:
+            ssl.create_default_context().load_verify_locations(cadata=pem)
+        except (ssl.SSLError, ValueError):
+            raise forms.ValidationError("This is not a valid PEM certificate (-----BEGIN CERTIFICATE----- ...).")
+        return pem + "\n"
+
     def clean(self):
         data = super().clean()
         scheme = data.get("scheme")
+        if scheme != Scheme.MQTTS:
+            data["ca_pem"] = ""
         if scheme in (Scheme.WSS, Scheme.WS):
             path = (data.get("path") or "").strip() or "/"
             if not path.startswith("/"):

@@ -1,0 +1,9 @@
+# Semua layanan MQTT Client: web (Gunicorn) + relay. Contoh:
+#   sudo systemctl enable --now mqttc.target
+#   sudo systemctl restart mqttc.target
+[Unit]
+Description=MQTT Client (web + relay)
+Wants=mqttc-web.service mqttc-relay.service
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Devices from IoT Platform · MQTT Client{% endblock %}
+
+{% block content %}
+{# Device milik pengguna dan yang dibagikan kepadanya, dari API IoT Platform (/api/v2/me/devices). #}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'connections:list' %}">Connections</a></li>
+  <li class="breadcrumb-item active" aria-current="page">From IoT Platform</li>
+</ol></nav>
+<h1 class="h3 mb-1">From IoT Platform</h1>
+<p class="text-muted">Connections that log in to the IoT Platform broker with your platform account: your MQTT sandbox,
+  or one of your devices.</p>
+
+{% if sandbox and sandbox.available %}
+{# Akun MQTT sandbox (tahap M5, platform tahap 23): bebas publish/subscribe di sandbox/<username>/#. #}
+<div class="card mb-3 profile-card color-purple"><div class="card-body d-flex flex-wrap align-items-center gap-3">
+  <div class="me-auto">
+    <h2 class="h5 mb-1">MQTT sandbox</h2>
+    <p class="small text-muted mb-0">No device needed: practice publish and subscribe on the IoT Platform broker
+      {% if sandbox.enabled %}under <code>{{ sandbox.topic_root }}/#</code> and the shared <code>{{ sandbox.shared_root }}/#</code>{% else %}in your own topics under <code>sandbox/</code>{% endif %}.</p>
+  </div>
+  {% if sandbox_profile %}
+  <a class="btn btn-sm btn-success" href="{% url 'connections:session' sandbox_profile.pk %}">Open connection</a>
+  {% elif sandbox.enabled %}
+  <form method="post" action="{% url 'connections:platform_sandbox' %}">{% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-primary">Create connection</button></form>
+  {% elif sandbox.needs_consent %}
+  <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Sign in again and allow the sandbox permission">Sign in again to allow</button></form>
+  {% else %}
+  <a class="btn btn-sm btn-outline-primary" href="{{ sandbox.manage_url }}" target="_blank" rel="noopener">Create sandbox account on IoT Platform ↗</a>
+  {% endif %}
+</div></div>
+{% endif %}
+
+<h2 class="h5 mt-4 mb-1">Connect as a device</h2>
+<p class="small text-muted">The connection logs in as the device (its access token), so you can send telemetry,
+  receive desired states and commands, and answer commands, just like the real device. The token is fetched from
+  IoT Platform each time you connect; it is not stored here.</p>
+<div class="card mb-3"><div class="card-body small">
+  Broker: {% if broker.websocket %}<code>{{ broker.websocket }}</code> (WebSocket, direct)
+  {% else %}<code>{% if broker.mqtt.tls %}mqtts{% else %}mqtt{% endif %}://{{ broker.mqtt.host }}:{{ broker.mqtt.port }}</code> (through the relay){% endif %}
+  · topic prefix <code>{{ broker.topic_prefix }}</code>
+</div></div>
+
+<div class="card"><div class="card-body p-0">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Device</th><th>Owner</th><th>Your role</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for device in devices %}
+        <tr>
+          <td><strong>{{ device.name }}</strong>{% if device.location %}<div class="small text-muted">{{ device.location }}</div>{% endif %}</td>
+          <td>{{ device.owner }}</td>
+          <td class="text-capitalize">{{ device.role }}</td>
+          <td>{% if not device.is_active %}<span class="badge text-bg-secondary">inactive</span>
+              {% elif device.is_online %}<span class="badge text-bg-success">online</span>
+              {% else %}<span class="badge text-bg-light border">offline</span>{% endif %}</td>
+          <td class="text-end">
+            {% if device.profile_id %}
+            <a class="btn btn-sm btn-success" href="{% url 'connections:session' device.profile_id %}">Open connection</a>
+            {% elif device.access_token %}
+            <form method="post" action="{% url 'connections:platform_create' device.id %}">{% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-success">Create connection</button>
+            </form>
+            {% else %}
+            <span class="small text-muted" title="Only Owners and Editors can use the device's access token">Needs Editor access</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">You have no devices on IoT Platform yet.
+          <a href="{{ platform_url }}/devices/" target="_blank" rel="noopener">Add one there ↗</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div></div>
+{% endblock %}

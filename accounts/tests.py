@@ -113,7 +113,10 @@ class LoginTests(TestCase):
         response = self.client.get(reverse("accounts:callback"), {"error": "access_denied"}, follow=True)
         self.assertContains(response, "Sign-in was canceled.")
         self.patch_client(FakeClient(error=OAuthError(error="mismatching_state")))
-        response = self.client.get(reverse("accounts:callback"), follow=True)
+        # assertLogs: pesan log yang memang diharapkan tidak dicetak ke layar saat tes.
+        with self.assertLogs("accounts.views", "WARNING") as logs:
+            response = self.client.get(reverse("accounts:callback"), follow=True)
+        self.assertIn("mismatching_state", logs.output[0])
         self.assertContains(response, "Sign-in with IoT Platform failed.")
         self.assertFalse(User.objects.exists())
 
@@ -121,7 +124,8 @@ class LoginTests(TestCase):
         client = FakeClient()
         client.authorize_redirect = mock.Mock(side_effect=requests.ConnectionError("down"))
         self.patch_client(client)
-        response = self.client.get(reverse("accounts:login"), follow=True)
+        with self.assertLogs("accounts.views", "ERROR"):
+            response = self.client.get(reverse("accounts:login"), follow=True)
         self.assertContains(response, "IoT Platform cannot be reached")
 
     @mock.patch("accounts.platform.requests.post")

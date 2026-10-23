@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     # App milik project ini:
     "accounts",      # pengguna (dari IoT Platform), login OpenID Connect, token platform
     "connections",   # profil koneksi broker MQTT dan langganan tersimpan
+    "launcher",      # perintah manage.py runall: web + relay dari satu terminal
 ]
 
 MIDDLEWARE = [
@@ -117,9 +118,28 @@ OIDC_ISSUER = (os.getenv("OIDC_ISSUER", "") or f"{PLATFORM_URL}/o").rstrip("/")
 # Dari `python manage.py oauth_client "MQTT Client" --redirect-uri .../oidc/callback/` di platform.
 OIDC_CLIENT_ID = os.getenv("OIDC_CLIENT_ID", "")
 OIDC_CLIENT_SECRET = os.getenv("OIDC_CLIENT_SECRET", "")
-OIDC_SCOPES = os.getenv("OIDC_SCOPES", "openid profile email devices:read")
+# mqtt:sandbox (tahap M5): akun MQTT sandbox pengguna di broker platform.
+OIDC_SCOPES = os.getenv("OIDC_SCOPES", "openid profile email devices:read mqtt:sandbox")
 # Batas waktu (detik) setiap permintaan ke platform.
 PLATFORM_TIMEOUT = float(os.getenv("PLATFORM_TIMEOUT", "10"))
+# Broker MQTT IoT Platform untuk BROWSER (sama dengan MQTT_PUBLIC_WS_URL di platform), dipakai
+# templat "IoT Platform broker". Kosong = dihitung dari PLATFORM_URL bila https
+# (https://iot.domain -> wss://iot.domain/mqtt); di laptop (http://127.0.0.1:8000) platform
+# biasanya tidak punya broker WebSocket, jadi templat itu disembunyikan.
+PLATFORM_MQTT_WS_URL = os.getenv("PLATFORM_MQTT_WS_URL", "").strip()
+
+
+# --- Relay WebSocket -> TCP (tahap M4) ----------------------------------------------
+# Broker mqtt:// dan mqtts:// dijangkau browser lewat relay (paket relay/, perintah
+# `python -m relay`). Lihat docs/tahap-m4-relay.md.
+
+# Alamat relay untuk BROWSER, diakhiri "/". Server: wss://mqtt.domain-anda/relay/ (lewat
+# Nginx). Laptop: ws://127.0.0.1:8003/relay/. Kosong = relay tidak tersedia.
+RELAY_PUBLIC_URL = os.getenv("RELAY_PUBLIC_URL", "")
+# Rahasia bersama Django <-> relay untuk menukar tiket (endpoint /internal/relay/...).
+RELAY_SHARED_SECRET = os.getenv("RELAY_SHARED_SECRET", "")
+RELAY_TICKET_SECONDS = int(os.getenv("RELAY_TICKET_SECONDS", "60"))
+RELAY_TICKETS_PER_MINUTE = int(os.getenv("RELAY_TICKETS_PER_MINUTE", "20"))
 
 
 # --- Bahasa, waktu, file statis -------------------------------------------------
@@ -143,6 +163,8 @@ if not DEBUG:
         raise ImproperlyConfigured("Set DJANGO_SECRET_KEY in .env to a long random value (50+ characters).")
     if not (OIDC_CLIENT_ID and OIDC_CLIENT_SECRET):
         raise ImproperlyConfigured("Set OIDC_CLIENT_ID and OIDC_CLIENT_SECRET in .env.")
+    if RELAY_PUBLIC_URL and len(RELAY_SHARED_SECRET) < 32:
+        raise ImproperlyConfigured("Set RELAY_SHARED_SECRET in .env to a random value (32+ characters).")
 
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     if os.getenv("DJANGO_HTTPS", "False") == "True":

@@ -16,12 +16,14 @@
   const pathField = document.getElementById("path-field");
   const preview = document.getElementById("url-preview");
   const relayNote = document.getElementById("relay-note");
+  const caField = document.getElementById("ca-field");
 
   function update() {
     const value = scheme.value;
     const websocket = value === "ws" || value === "wss";
     pathField.classList.toggle("d-none", !websocket);
     relayNote.classList.toggle("d-none", websocket);
+    caField.classList.toggle("d-none", value !== "mqtts");
     port.placeholder = DEFAULT_PORTS[value];
     let text = `${value}://${host.value.trim() || "host"}:${port.value || DEFAULT_PORTS[value]}`;
     if (websocket) {

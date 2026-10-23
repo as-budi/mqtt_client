@@ -1,0 +1,9 @@
+[Unit]
+Description=MQTT Client: daily clean-up at 03:25
+
+[Timer]
+OnCalendar=*-*-* 03:25:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

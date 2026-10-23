@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ profile.name }} · MQTT Client{% endblock %}
+
+{% block content %}
+{# Halaman koneksi (tahap M3). Semua interaksi MQTT ada di static/js/session.js (mqtt.js). #}
+{{ config|json_script:"session-config" }}
+{% csrf_token %}
+
+<nav aria-label="breadcrumb"><ol class="breadcrumb small mb-2">
+  <li class="breadcrumb-item"><a href="{% url 'connections:list' %}">Connections</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ profile.name }}</li>
+</ol></nav>
+
+<div class="card profile-card color-{{ profile.color }} mb-3">
+  <div class="card-body d-flex flex-wrap align-items-center gap-3">
+    <div class="me-auto">
+      <h1 class="h4 mb-1">{{ profile.name }}
+        {% if profile.route == "direct" %}<span class="badge text-bg-light border align-middle">Direct</span>
+        {% else %}<span class="badge text-bg-warning align-middle">Relay</span>{% endif %}
+        {% if profile.platform_device_id %}<span class="badge text-bg-success align-middle">IoT Platform device</span>{% endif %}
+        {% if profile.platform_sandbox %}<span class="badge badge-sandbox align-middle">IoT Platform sandbox</span>{% endif %}
+      </h1>
+      <div class="small font-monospace text-muted profile-url">{{ profile.url }}</div>
+    </div>
+    <span id="status" class="status-pill status-disconnected" role="status" aria-live="polite">Disconnected</span>
+    <form id="connect-form" class="d-flex flex-wrap align-items-center gap-2" autocomplete="off">
+      {% if profile.username and not profile.from_platform %}
+      {# Password broker hanya ada di browser ini; tidak pernah dikirim ke server aplikasi. #}
+      <input type="password" id="password" class="form-control form-control-sm" style="width: 12rem"
+             placeholder="Password for {{ profile.username|truncatechars:16 }}" aria-label="Broker password">
+      <div class="form-check small mb-0">
+        <input class="form-check-input" type="checkbox" id="remember-password">
+        <label class="form-check-label" for="remember-password" title="Stored in this browser only. Anyone using this browser can read it.">Remember here</label>
+      </div>
+      {% endif %}
+      <button type="submit" id="connect" class="btn btn-success btn-sm">Connect</button>
+      <button type="button" id="disconnect" class="btn btn-outline-secondary btn-sm d-none">Disconnect</button>
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'connections:edit' profile.pk %}">Edit</a>
+    </form>
+  </div>
+</div>
+<div id="alert" class="alert d-none" role="alert"></div>
+
+<div class="row g-3">
+  {# ---------- Kolom kiri: langganan dan publish ---------- #}
+  <div class="col-lg-5 col-xl-4">
+    <div class="card mb-3"><div class="card-body">
+      <div class="form-section-title mb-2">Subscriptions</div>
+      <form id="subscribe-form" class="input-group input-group-sm mb-1" autocomplete="off">
+        <input type="text" id="subscribe-topic" class="form-control font-monospace" placeholder="topic/#" aria-label="Topic filter">
+        <select id="subscribe-qos" class="form-select flex-grow-0" style="width: 4.5rem" aria-label="QoS">
+          <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+        </select>
+        <button type="submit" class="btn btn-outline-primary">Subscribe</button>
+      </form>
+      <div id="subscribe-error" class="text-danger small mb-1"></div>
+      <ul id="subscriptions" class="list-unstyled mb-0 small"></ul>
+    </div></div>
+
+    <div class="card mb-3"><div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="form-section-title">Publish</div>
+        <div class="dropdown">
+          <button class="btn btn-sm btn-link p-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Saved</button>
+          <ul id="saved-menu" class="dropdown-menu dropdown-menu-end saved-menu"></ul>
+        </div>
+      </div>
+      <div id="device-topics" class="d-none mb-2">
+        <div class="small text-muted mb-1" id="device-topics-label">Device topics</div>
+        <div class="d-flex flex-wrap gap-1" id="device-topic-buttons"></div>
+      </div>
+      <form id="publish-form" autocomplete="off">
+        <input type="text" id="publish-topic" class="form-control form-control-sm font-monospace mb-2" placeholder="topic" list="topic-suggestions" aria-label="Topic">
+        <datalist id="topic-suggestions"></datalist>
+        <textarea id="publish-payload" class="form-control form-control-sm font-monospace mb-1" rows="5" placeholder='{"temperature": 25.1}' aria-label="Payload"></textarea>
+        <div id="payload-status" class="small text-muted mb-2"></div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <select id="publish-format" class="form-select form-select-sm" style="width: 6rem" aria-label="Payload format">
+            <option value="text">Text</option><option value="json">JSON</option>
+          </select>
+          <button type="button" id="format-json" class="btn btn-sm btn-outline-secondary">Format</button>
+          <select id="publish-qos" class="form-select form-select-sm" style="width: 6rem" aria-label="QoS">
+            <option value="0">QoS 0</option><option value="1">QoS 1</option><option value="2">QoS 2</option>
+          </select>
+          <div class="form-check mb-0">
+            <input class="form-check-input" type="checkbox" id="publish-retain">
+            <label class="form-check-label small" for="publish-retain">Retain</label>
+          </div>
+        </div>
+        <details id="v5-properties" class="small mb-2 d-none">
+          {# Properti MQTT 5 (tahap M6): ikut dikirim dengan setiap publish. #}
+          <summary class="text-muted">MQTT 5 properties</summary>
+          <div class="row g-1 mt-1">
+            <div class="col-6"><input type="text" id="prop-content-type" class="form-control form-control-sm" placeholder="Content type, e.g. application/json" aria-label="Content type"></div>
+            <div class="col-6"><input type="number" id="prop-expiry" class="form-control form-control-sm" min="0" placeholder="Expiry (s)" aria-label="Message expiry interval in seconds"></div>
+            <div class="col-12"><input type="text" id="prop-response-topic" class="form-control form-control-sm font-monospace" placeholder="Response topic" aria-label="Response topic"></div>
+            <div class="col-12"><textarea id="prop-user" class="form-control form-control-sm font-monospace" rows="2" placeholder="User properties, one key=value per line" aria-label="User properties"></textarea></div>
+          </div>
+        </details>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" id="publish" class="btn btn-primary btn-sm" disabled title="Ctrl+Enter">Publish</button>
+          <div class="dropdown">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="dropdown" aria-expanded="false">History</button>
+            <ul id="history-menu" class="dropdown-menu saved-menu"></ul>
+          </div>
+          <button type="button" id="save-message" class="btn btn-outline-secondary btn-sm">Save</button>
+          <button type="button" id="clear-retained" class="btn btn-outline-danger btn-sm ms-auto" disabled
+                  title="Publish an empty retained message to remove the retained message on this topic">Clear retained</button>
+        </div>
+        <div id="save-panel" class="border rounded p-2 mt-2 d-none">
+          <div class="input-group input-group-sm mb-1">
+            <input type="text" id="save-name" class="form-control" placeholder="Name" maxlength="80" aria-label="Name">
+            <button type="button" id="save-confirm" class="btn btn-primary">Save</button>
+          </div>
+          <div class="form-check small mb-0">
+            <input class="form-check-input" type="checkbox" id="save-all">
+            <label class="form-check-label" for="save-all">Available in all my connections</label>
+          </div>
+        </div>
+        <div id="publish-error" class="text-danger small mt-1"></div>
+      </form>
+    </div></div>
+
+    {# ---------- Otomasi (tahap M5) ---------- #}
+    <div class="card mb-3"><div class="card-body">
+      <div class="form-section-title mb-2">Automation</div>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <span class="small">Publish the message above every</span>
+        <input type="number" id="repeat-seconds" class="form-control form-control-sm" style="width: 5rem" min="1" value="5" aria-label="Seconds between messages">
+        <span class="small">s</span>
+        <button type="button" id="repeat-toggle" class="btn btn-sm btn-outline-primary">Start</button>
+      </div>
+      <div id="repeat-status" class="small text-muted mb-1" role="status"></div>
+      <p class="small text-muted mb-0">Placeholders in topic and payload: <code>{{"{{"}}counter}}</code>, <code>{{"{{"}}timestamp}}</code>,
+        <code>{{"{{"}}unix}}</code>, <code>{{"{{"}}random:20:30}}</code>, <code>{{"{{"}}int:0:100}}</code>, <code>{{"{{"}}bool}}</code>.</p>
+
+      <div id="device-automation" class="d-none border-top pt-2 mt-2">
+        <div class="small text-muted mb-2">Behave like the device:</div>
+        <button type="button" id="simulate-sensors" class="btn btn-sm btn-outline-secondary mb-2">Simulate sensors</button>
+        <div class="form-check small">
+          <input class="form-check-input" type="checkbox" id="auto-answer">
+          <label class="form-check-label" for="auto-answer">Answer commands automatically</label>
+        </div>
+        <textarea id="auto-answer-template" class="form-control form-control-sm font-monospace mb-2" rows="2" aria-label="Command answer">{"success": true, "method": "{{"{{"}}method}}"}</textarea>
+        <div class="form-check small">
+          <input class="form-check-input" type="checkbox" id="auto-desired">
+          <label class="form-check-label" for="auto-desired">Report desired states back as telemetry</label>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <div class="form-check small mb-0">
+            <input class="form-check-input" type="checkbox" id="auto-ota">
+            <label class="form-check-label" for="auto-ota">Simulate firmware updates (OTA)</label>
+          </div>
+          <select id="auto-ota-result" class="form-select form-select-sm" style="width: 8rem" aria-label="OTA result">
+            <option value="success">Succeed</option><option value="fail">Fail</option>
+          </select>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  {# ---------- Kolom kanan: pesan ---------- #}
+  <div class="col-lg-7 col-xl-8">
+    <div class="card"><div class="card-body">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <div class="form-section-title">Messages <span id="message-count" class="text-muted fw-normal"></span></div>
+        <ul class="nav nav-pills nav-sm me-auto message-tabs">
+          <li class="nav-item"><button type="button" class="nav-link active" data-message-tab="list">List</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-message-tab="tree">Topics</button></li>
+          <li class="nav-item"><button type="button" class="nav-link" data-message-tab="charts">Charts</button></li>
+        </ul>
+        <input type="search" id="filter" class="form-control form-control-sm" style="width: 12rem" placeholder="Filter (topic or text)  /" aria-label="Filter messages">
+        <select id="direction" class="form-select form-select-sm" style="width: 7.5rem" aria-label="Direction">
+          <option value="all">All</option><option value="in">Received</option><option value="out">Published</option>
+        </select>
+        <select id="view" class="form-select form-select-sm" style="width: 7rem" aria-label="Payload view">
+          <option value="auto">Auto</option><option value="text">Text</option><option value="json">JSON</option>
+          <option value="hex">Hex</option><option value="base64">Base64</option>
+        </select>
+        <button type="button" id="pause" class="btn btn-sm btn-outline-secondary" aria-pressed="false">Pause</button>
+        <button type="button" id="clear" class="btn btn-sm btn-outline-secondary">Clear</button>
+        <div class="dropdown">
+          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Export</button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button type="button" class="dropdown-item" id="export-json">JSON</button></li>
+            <li><button type="button" class="dropdown-item" id="export-csv">CSV (Excel)</button></li>
+          </ul>
+        </div>
+      </div>
+      <div id="messages" class="message-list" aria-live="off"></div>
+      <div id="topic-tree" class="topic-tree message-list d-none"></div>
+      <div id="charts" class="charts d-none"></div>
+      <p id="messages-empty" class="text-muted small text-center py-5 mb-0">No messages yet. Connect, then subscribe or publish.</p>
+    </div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'vendor/mqtt.min.js' %}"></script>
+<script src="{% static 'js/session.js' %}"></script>
+{% endblock %}

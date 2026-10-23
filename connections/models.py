@@ -10,9 +10,13 @@ Dua jalur koneksi, ditentukan skema alamat (lihat docs/rencana-mqtt-client.md):
     wss:// ws://        Direct: browser langsung ke broker (MQTT over WebSocket)
     mqtts:// mqtt://    Relay:  browser -> relay di server -> TCP ke broker (tahap M4)
 """
+import hashlib
+import secrets
+
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 from .validators import validate_topic_filter, validate_topic_name
 
@@ -85,6 +89,14 @@ class ConnectionProfile(models.Model):
 
     # Profil yang dibuat dari device IoT Platform (tahap M3): token diambil ulang dari API.
     platform_device_id = models.PositiveIntegerField("IoT Platform device", null=True, blank=True)
+    # Profil akun MQTT sandbox pengguna di broker platform (tahap M5): username/password
+    # diambil dari API platform saat Connect; topik boleh memakai {sandbox} = sandbox/<username>.
+    platform_sandbox = models.BooleanField("IoT Platform sandbox", default=False)
+
+    # CA sendiri untuk mqtts:// lewat relay (tahap M6), mis. broker lab bersertifikat self-signed.
+    # Sertifikat PUBLIK (PEM), bukan rahasia. Kosong = hanya CA umum (daftar CA sistem).
+    ca_pem = models.TextField("custom CA certificate (PEM)", blank=True, max_length=20000,
+                              help_text="Only for mqtts://. Paste the broker's CA certificate if it is self-signed.")
 
     position = models.PositiveIntegerField("order", default=0)
     created_at = models.DateTimeField("created", auto_now_add=True)
@@ -98,6 +110,10 @@ class ConnectionProfile(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def from_platform(self):
+        return self.platform_device_id is not None or self.platform_sandbox
 
     def get_absolute_url(self):
         return reverse("connections:edit", args=[self.pk])
@@ -127,7 +143,12 @@ class ConnectionProfile(models.Model):
 
 
 class SubscriptionPreset(models.Model):
-    """Langganan yang dipasang otomatis setiap kali profil tersambung (tahap M3)."""
+    """Langganan yang dipasang otomatis setiap kali profil tersambung (tahap M3).
+
+    Untuk profil dari device IoT Platform, topik boleh memuat {token} dan {prefix}, mis.
+    "{prefix}/{token}/desired". Keduanya diisi saat Connect dari API platform, sehingga
+    access token device tidak pernah tersimpan di database aplikasi ini.
+    """
 
     profile = models.ForeignKey(ConnectionProfile, on_delete=models.CASCADE, related_name="subscriptions")
     topic_filter = models.CharField("topic filter", max_length=500, validators=[validate_topic_filter])
@@ -144,3 +165,67 @@ class SubscriptionPreset(models.Model):
 
     def __str__(self):
         return self.topic_filter
+
+
+class SavedMessage(models.Model):
+    """Pesan publish yang disimpan untuk dipakai lagi ("Saved messages", tahap M3)."""
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_messages")
+    # Kosong = tersedia di semua koneksi milik pengguna ini.
+    profile = models.ForeignKey(ConnectionProfile, null=True, blank=True, on_delete=models.CASCADE,
+                                related_name="saved_messages")
+    name = models.CharField("name", max_length=80)
+    topic = models.CharField("topic", max_length=500, validators=[validate_topic_name])
+    payload = models.TextField("payload", blank=True, max_length=65536)
+    qos = models.PositiveSmallIntegerField("QoS", choices=Qos.choices, default=Qos.AT_MOST_ONCE)
+    retain = models.BooleanField("retain", default=False)
+    created_at = models.DateTimeField("created", auto_now_add=True)
+
+    class Meta:
+        ordering = ["name", "pk"]
+
+    def __str__(self):
+        return self.name
+
+    def as_dict(self):
+        return {"id": self.pk, "name": self.name, "topic": self.topic, "payload": self.payload,
+                "qos": self.qos, "retain": self.retain, "profile": self.profile_id}
+
+
+class RelayTicket(models.Model):
+    """Tiket sekali pakai untuk relay WebSocket -> TCP (tahap M4).
+
+    Browser tidak pernah memberi tahu relay ke mana harus menyambung. Django memeriksa
+    pengguna dan profil, lalu menyimpan tujuan (host, port, TLS) di tiket ini. Relay
+    menukarkan tiket lewat endpoint internal (connections/relay.py) dan baru tahu
+    tujuannya saat itu. Tiket berlaku RELAY_TICKET_SECONDS (60 detik) dan sekali pakai.
+
+    Yang disimpan hanya HASH tiket (seperti password): kebocoran database tidak
+    membuat tiket yang masih berlaku bisa dipakai.
+    """
+
+    token_hash = models.CharField(max_length=64, unique=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="relay_tickets")
+    profile = models.ForeignKey(ConnectionProfile, null=True, on_delete=models.SET_NULL, related_name="+")
+    host = models.CharField(max_length=253)
+    port = models.PositiveIntegerField()
+    tls = models.BooleanField()
+    ca_pem = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    # Diisi relay bila koneksi gagal, mis. "address_not_allowed", untuk pesan di browser.
+    failure = models.CharField(max_length=40, blank=True)
+    failure_detail = models.CharField(max_length=200, blank=True)
+
+    @staticmethod
+    def hash(token):
+        return hashlib.sha256(token.encode()).hexdigest()
+
+    @classmethod
+    def issue(cls, user, profile):
+        """Buat tiket baru; mengembalikan (tiket, token-teks-asli)."""
+        token = secrets.token_urlsafe(32)
+        ticket = cls.objects.create(token_hash=cls.hash(token), user=user, profile=profile,
+                                    host=profile.host, port=profile.effective_port, tls=profile.uses_tls,
+                                    ca_pem=profile.ca_pem if profile.uses_tls else "")
+        return ticket, token

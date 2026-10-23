@@ -46,7 +46,10 @@ def _save(request, form, formset, created):
 
 @login_required
 def profile_create(request):
-    preset = all_presets().get(request.GET.get("preset", ""))
+    presets = all_presets()
+    # ?preset=<kunci templat>; "other" atau kosong = "Others": form kosong untuk broker lain.
+    preset_key = request.GET.get("preset", "")
+    preset = presets.get(preset_key)
     initial = preset["data"] if preset else {}
     if request.method == "POST":
         form = ConnectionProfileForm(request.POST, owner=request.user)
@@ -57,7 +60,8 @@ def profile_create(request):
         form = ConnectionProfileForm(initial=initial, owner=request.user)
         formset = SubscriptionFormSet(instance=ConnectionProfile())
     return render(request, "connections/profile_form.html",
-                  {"form": form, "formset": formset, "preset": preset, "creating": True})
+                  {"form": form, "formset": formset, "preset": preset, "creating": True,
+                   "presets": presets, "preset_key": preset_key if preset else "other"})
 
 
 @login_required

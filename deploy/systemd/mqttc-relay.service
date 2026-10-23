@@ -1,0 +1,41 @@
+# Relay WebSocket -> TCP untuk broker mqtt:// dan mqtts:// (tahap M4).
+# Salin ke /etc/systemd/system/ (lihat docs/deploy.md); dijalankan bersama web lewat mqttc.target.
+# Pengaturan dibaca dari /srv/mqttc/app/.env (RELAY_*), lihat relay/config.py dan docs/tahap-m4-relay.md.
+[Unit]
+Description=MQTT Client relay (WebSocket -> TCP)
+After=network-online.target mqttc-web.service
+Wants=network-online.target
+PartOf=mqttc.target
+
+[Service]
+User=mqttc
+Group=mqttc
+WorkingDirectory=/srv/mqttc/app
+ExecStart=/srv/mqttc/venv/bin/python -m relay
+Restart=on-failure
+RestartSec=3
+
+# --- Sandbox: relay menyambung ke internet atas permintaan pengguna, jadi dikunci rapat ---
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+# Lapisan kedua (di kernel) di samping pemeriksaan alamat di relay/addresses.py:
+# jaringan privat, link-local (termasuk metadata cloud 169.254.169.254), dan CGNAT ditolak.
+# Loopback TIDAK ditolak di sini karena relay perlu menghubungi Django (127.0.0.1:8002);
+# larangan ke 127.0.0.1 port lain dijaga oleh kode relay.
+IPAddressDeny=10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254.0.0/16 100.64.0.0/10 fc00::/7 fe80::/10
+MemoryMax=256M
+CPUQuota=50%
+TasksMax=64
+
+[Install]
+WantedBy=mqttc.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=MQTT Client: daily backup at 02:40
+
+[Timer]
+OnCalendar=*-*-* 02:40:00
+Persistent=true
+RandomizedDelaySec=5m
+
+[Install]
+WantedBy=timers.target

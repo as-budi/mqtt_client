@@ -5,3 +5,7 @@ python-dotenv>=1.0
 Authlib>=1.8,<1.9
 joserfc>=1.7.5,<1.8
 requests>=2.31
+# Relay WebSocket -> TCP (tahap M4, `python -m relay`)
+websockets>=17.1,<18
+# Server web produksi (tahap M7, deploy/systemd/mqttc-web.service)
+gunicorn>=23,<24

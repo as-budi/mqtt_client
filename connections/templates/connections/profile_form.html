@@ -8,7 +8,20 @@
   <li class="breadcrumb-item"><a href="{% url 'connections:list' %}">Connections</a></li>
   <li class="breadcrumb-item active" aria-current="page">{% if creating %}New{% else %}{{ profile.name }}{% endif %}</li>
 </ol></nav>
-<h1 class="h3 mb-3">{% if creating %}New connection{% if preset %} <span class="text-muted fw-normal">· {{ preset.label }}</span>{% endif %}{% else %}Edit connection{% endif %}</h1>
+<h1 class="h3 mb-3">{% if creating %}New connection{% if preset %} <span class="text-muted fw-normal">· {{ preset.label }}</span>{% else %} <span class="text-muted fw-normal">· Others</span>{% endif %}{% else %}Edit connection{% endif %}</h1>
+
+{% if creating %}
+{# Pilih templat broker, atau "Others" untuk mengisi sendiri. Mengganti pilihan mengosongkan isian form. #}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="Broker template">
+  <span class="small text-muted me-1">Start from:</span>
+  {% for key, item in presets.items %}
+  <a class="btn btn-sm {% if key == preset_key %}btn-primary{% else %}btn-outline-primary{% endif %}"
+     href="?preset={{ key }}"{% if key == preset_key %} aria-current="true"{% endif %}>{{ item.label }}</a>
+  {% endfor %}
+  <a class="btn btn-sm {% if preset_key == 'other' %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+     href="?preset=other"{% if preset_key == 'other' %} aria-current="true"{% endif %}>Others</a>
+</div>
+{% endif %}
 
 <form method="post" novalidate>
   {% csrf_token %}
@@ -25,14 +38,16 @@
           <div class="col-sm-7">{% include "includes/field.html" with field=form.host wrapper="mb-0" %}</div>
           <div class="col-sm-5">{% include "includes/field.html" with field=form.port wrapper="mb-0" %}</div>
           <div class="col-sm-7">{% include "includes/field.html" with field=form.path wrapper="mb-0" field_id="path-field" %}</div>
+          {# CA sendiri: hanya untuk mqtts:// lewat relay (tahap M6). #}
+          <div class="col-12">{% include "includes/field.html" with field=form.ca_pem wrapper="mb-0" field_id="ca-field" %}</div>
         </div>
         {# Diisi connection_form.js: alamat lengkap dan jalur Direct/Relay. #}
         <div class="small mt-3">
           <span class="text-muted">Address:</span> <code id="url-preview"></code>
           <div id="relay-note" class="alert alert-warning small mt-2 mb-0 d-none">
             Browsers cannot open TCP connections, so <code>mqtt://</code> and <code>mqtts://</code> brokers are reached
-            through the relay on this server. The relay is coming in a later version; until then use a broker
-            with a WebSocket port (<code>wss://</code>).
+            through the relay on this server. Only ports 1883 and 8883 on public addresses are allowed.
+            If the broker also has a WebSocket port, <code>wss://</code> is faster.
           </div>
         </div>
       </div></div>

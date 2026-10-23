@@ -5,8 +5,8 @@ Broker publik di bawah gratis dan TERBUKA: siapa saja bisa membaca topik Anda. P
 hanya untuk belajar, dengan nama topik yang unik.
 
 Broker IoT Platform butuh login (username = password = access token device) dan setiap
-device hanya boleh memakai topiknya sendiri. Mulai tahap M3, profil untuk device
-platform bisa dibuat langsung dari daftar device.
+device hanya boleh memakai topiknya sendiri. Cara termudah: Connections -> From IoT Platform,
+yang membuat profil device lengkap dengan login dan topiknya.
 """
 from urllib.parse import urlparse
 
@@ -28,14 +28,29 @@ PUBLIC_PRESETS = {
 }
 
 
+def platform_ws_url():
+    """Alamat WebSocket broker IoT Platform, atau "" bila tidak diketahui."""
+    if settings.PLATFORM_MQTT_WS_URL:
+        return settings.PLATFORM_MQTT_WS_URL
+    parsed = urlparse(settings.PLATFORM_URL)
+    # Hanya platform https (server) yang punya wss://<domain>/mqtt (tahap 21 platform).
+    # Platform di laptop (http://127.0.0.1:8000) biasanya memakai broker lain, mis. broker.emqx.io.
+    return f"wss://{parsed.hostname}/mqtt" if parsed.scheme == "https" and parsed.hostname else ""
+
+
 def platform_preset():
-    """Broker IoT Platform lewat WebSocket, dari alamat platform (PLATFORM_URL)."""
-    host = urlparse(settings.PLATFORM_URL).hostname or "localhost"
+    """Broker IoT Platform lewat WebSocket, atau None bila alamatnya tidak diketahui."""
+    url = urlparse(platform_ws_url())
+    if url.scheme not in ("ws", "wss") or not url.hostname:
+        return None
     return {
         "label": "IoT Platform broker (WebSocket)",
-        "data": {"name": "IoT Platform", "scheme": "wss", "host": host, "port": 443, "path": "/mqtt", "color": "green"},
+        "data": {"name": "IoT Platform", "scheme": url.scheme, "host": url.hostname,
+                 "port": url.port or (443 if url.scheme == "wss" else 80), "path": url.path or "/mqtt",
+                 "color": "green"},
     }
 
 
 def all_presets():
-    return {"platform": platform_preset(), **PUBLIC_PRESETS}
+    platform = platform_preset()
+    return {**({"platform": platform} if platform else {}), **PUBLIC_PRESETS}

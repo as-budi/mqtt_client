@@ -1,0 +1,34 @@
+# Web MQTT Client: Gunicorn di 127.0.0.1:8002, di belakang Nginx (tahap M7).
+# Salin ke /etc/systemd/system/ (lihat docs/deploy.md).
+[Unit]
+Description=MQTT Client web (Gunicorn)
+After=network-online.target mysql.service
+Wants=network-online.target
+PartOf=mqttc.target
+
+[Service]
+User=mqttc
+Group=mqttc
+WorkingDirectory=/srv/mqttc/app
+# Thread: setiap halaman bisa menunggu API IoT Platform (PLATFORM_TIMEOUT 10 detik).
+ExecStart=/srv/mqttc/venv/bin/gunicorn config.wsgi:application \
+    --bind 127.0.0.1:8002 --workers 2 --threads 4 --timeout 30 \
+    --access-logfile - --forwarded-allow-ips 127.0.0.1
+Restart=always
+RestartSec=3
+# --- Pengamanan proses (systemd sandboxing) ---
+# Tidak ada folder yang perlu ditulis: data ada di MySQL, sesi juga.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=mqttc.target

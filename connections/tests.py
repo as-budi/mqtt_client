@@ -107,6 +107,18 @@ class ProfileTests(TestCase):
         self.assertEqual((form.initial["host"], form.initial["port"]), ("broker.hivemq.com", 8884))
         self.assertContains(response, "HiveMQ public broker")
 
+    def test_others_option(self):
+        """"Others": form kosong untuk broker di luar templat, di halaman utama dan New connection."""
+        list_page = self.client.get(reverse("connections:list"))
+        self.assertContains(list_page, "?preset=other")
+        response = self.client.get(reverse("connections:create"), {"preset": "other"})
+        self.assertEqual(response.context["form"].initial, {})
+        self.assertEqual(response.context["preset_key"], "other")
+        self.assertContains(response, "· Others")
+        self.assertContains(response, 'href="?preset=hivemq"')
+        # Tanpa ?preset sama dengan Others.
+        self.assertEqual(self.client.get(reverse("connections:create")).context["preset_key"], "other")
+
     def test_list_shows_only_own_profiles(self):
         ConnectionProfile.objects.create(owner=self.budi, name="Mine", host="broker.emqx.io", port=8084)
         response = self.client.get(reverse("connections:list"))
@@ -154,3 +166,22 @@ class ProfileTests(TestCase):
         self.assertRedirects(self.client.post(reverse("connections:delete", args=[profile.pk])),
                              reverse("connections:list"))
         self.assertFalse(ConnectionProfile.objects.filter(pk=profile.pk).exists())
+
+
+class PlatformPresetTests(SimpleTestCase):
+    """Templat "IoT Platform broker" hanya muncul bila alamat WebSocket platform diketahui."""
+
+    def test_laptop_platform_has_no_websocket_preset(self):
+        from .presets import all_presets
+        with override_settings(PLATFORM_URL="http://127.0.0.1:8000", PLATFORM_MQTT_WS_URL=""):
+            self.assertNotIn("platform", all_presets())
+
+    def test_server_platform(self):
+        from .presets import all_presets
+        with override_settings(PLATFORM_URL="https://iot.example.org", PLATFORM_MQTT_WS_URL=""):
+            data = all_presets()["platform"]["data"]
+        self.assertEqual((data["scheme"], data["host"], data["port"], data["path"]),
+                         ("wss", "iot.example.org", 443, "/mqtt"))
+        with override_settings(PLATFORM_URL="http://127.0.0.1:8000", PLATFORM_MQTT_WS_URL="ws://127.0.0.1:9001/mqtt"):
+            data = all_presets()["platform"]["data"]
+        self.assertEqual((data["scheme"], data["port"]), ("ws", 9001))
