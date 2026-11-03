@@ -98,7 +98,7 @@ Jawaban otomatis tidak masuk ke *History* publish, tetapi tetap tampil di daftar
 |---|---|
 | `connections/models.py`, migrasi `0003` | `ConnectionProfile.platform_sandbox`, `from_platform` |
 | `connections/platform_devices.py` | `load_sandbox()`, `sandbox_create` (`POST /connections/platform/sandbox/`) |
-| `connections/session.py` | Connect untuk profil sandbox; `device` (nama, board, firmware, variabel) dan `sandbox` di bahan connect |
+| `connections/session.py` | Connect untuk profil sandbox; `device` (nama, board, firmware, MAC, variabel) dan `sandbox` di bahan connect |
 | `connections/templates/connections/platform_devices.html` | kartu MQTT sandbox |
 | `connections/templates/connections/session.html` | kartu Automation |
 | `static/js/session.js` | `expand()` (placeholder), publish berulang, simulator, `automate()`, `simulateOta()` |
@@ -115,3 +115,33 @@ Jawaban otomatis tidak masuk ke *History* publish, tetapi tetap tampil di daftar
    Create connection → Connect**. Tombol *Sandbox topics* (My topic, Sensor, Shared chat) mengisi
    kotak Publish.
 4. Untuk device: buat koneksi device, centang pilihan otomatis, lalu kirim command dari platform.
+
+## 6. Pembaruan: MAC address di laporan firmware (mengikuti platform tahap 24)
+
+Platform tahap 24 menambah `mac` pada laporan firmware. Template ESP32 dan
+`scripts/fake_mqtt_device.py` di platform mengirim:
+
+```json
+{"version": "1.0.0", "board": "esp32", "mac": "24:6F:28:AA:BB:CC"}
+```
+
+Client kini mengirim bentuk yang sama di dua tempat:
+
+| Tempat | Payload |
+|---|---|
+| Tombol **Device topics → Firmware** (mengisi kotak Publish) | `{"version": "<versi di platform>", "board": "<board>", "mac": "<MAC>"}` |
+| **Simulate firmware updates (OTA)**, laporan terakhir setelah "restart" | `{"version": "<versi baru>", "board": "<board>", "mac": "<MAC>"}` |
+
+MAC diambil dari bahan connect (`connections/session.py`, kunci `device.mac`):
+
+- bila device di platform sudah punya MAC (`mac_address` dari `/api/v2/me/devices`, dilaporkan
+  board sungguhan), MAC itu yang dipakai, supaya kartu *Firmware* di platform tidak berganti-ganti;
+- bila belum, `simulated_mac(token)` membuat MAC tiruan yang tetap untuk token yang sama, dengan
+  rumus yang sama seperti `fake_mqtt_device.py`: `02:` + 10 digit pertama SHA-256 token. Awalan
+  `02` berarti *locally administered*, jadi tidak bentrok dengan MAC kartu jaringan asli.
+
+Platform yang belum diperbarui ke tahap 24 tidak mengirim `mac_address` (client tetap memakai MAC
+tiruan) dan tidak mengenal `mac` (kunci itu diabaikan; laporan versi tetap diterima).
+
+Berkas: `connections/session.py` (`simulated_mac()`), `static/js/session.js` (`firmwareReport()`,
+dipakai `showDeviceTopics()` dan `simulateOta()`), tes `connections/tests_session.py`.

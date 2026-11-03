@@ -649,7 +649,8 @@
       examples = [
         ["Telemetry", deviceTopics.telemetry, '{"temperature": 25.1}', 0, false],
         ["Online", deviceTopics.status, "online", 1, true],
-        ["Firmware", deviceTopics.firmware, `{"version": "${(deviceInfo && deviceInfo.firmware) || "1.0.0"}", "board": "${(deviceInfo && deviceInfo.board) || "sim"}"}`, 0, false],
+        // Laporan firmware seperti template ESP32 di platform: versi, board, dan MAC address.
+        ["Firmware", deviceTopics.firmware, JSON.stringify(firmwareReport()).replace(/,"/g, ', "').replace(/":/g, '": '), 0, false],
         ["Command response", deviceTopics.command_response, '{"success": true}', 1, false],
       ];
     } else if (sandboxInfo) {
@@ -815,6 +816,17 @@
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  // Laporan firmware {"version", "board", "mac"}, sama dengan template ESP32 platform (tahap 24).
+  // MAC dari server (connections/session.py): milik device di platform, atau MAC tiruan yang tetap.
+  function firmwareReport(version) {
+    const body = {
+      version: version || (deviceInfo && deviceInfo.firmware) || "1.0.0",
+      board: (deviceInfo && deviceInfo.board) || "sim",
+    };
+    if (deviceInfo && deviceInfo.mac) body.mac = deviceInfo.mac;
+    return body;
+  }
+
   // Simulasi pembaruan firmware OTA, mengikuti laporan ESP32 (firmware/esp32_mqtt di platform).
   async function simulateOta(responseTopic, params) {
     const report = (body) => publish(deviceTopics.firmware, JSON.stringify(body), 0, false, { quiet: true, properties: null });
@@ -832,7 +844,7 @@
     for (const state of ["DOWNLOADED", "VERIFIED", "UPDATING"]) { await sleep(400); report({ update, state }); }
     await sleep(1000);   // "restart"
     if (deviceInfo) deviceInfo.firmware = params.version || deviceInfo.firmware;
-    report({ version: params.version, board: (deviceInfo && deviceInfo.board) || "sim" });
+    report(firmwareReport(params.version));   // firmware "baru" melapor versi, board, dan MAC
   }
 
   // ================================================================ tahap M6

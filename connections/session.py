@@ -15,6 +15,7 @@ Protokol MQTT dijalankan pustaka mqtt.js DI BROWSER. Server hanya menyiapkan:
 Password broker biasa TIDAK pernah lewat server: diketik di browser dan langsung
 dipakai mqtt.js.
 """
+import hashlib
 import secrets
 from datetime import timedelta
 
@@ -29,6 +30,21 @@ from django.views.decorators.http import require_POST
 from accounts import platform
 
 from .models import ConnectionProfile, RelayTicket
+
+
+def simulated_mac(token):
+    """MAC address tiruan untuk laporan firmware simulator (platform tahap 24).
+
+    Laporan firmware di platform kini membawa "mac" selain "version" dan "board":
+        {"version": "1.0.0", "board": "esp32", "mac": "24:6F:28:AA:BB:CC"}
+    Bila device sudah punya MAC di platform (dilaporkan board sungguhan), simulator memakai
+    MAC itu, supaya kartu Firmware tidak berganti-ganti nilai. Bila belum, dibuat MAC yang
+    tetap untuk token yang sama, dengan cara yang sama seperti scripts/fake_mqtt_device.py di
+    repo platform. Byte pertama 02 = "locally administered": tidak bentrok dengan MAC kartu
+    jaringan asli.
+    """
+    digest = hashlib.sha256(token.encode()).hexdigest()[:10].upper()
+    return ":".join(["02"] + [digest[i:i + 2] for i in range(0, 10, 2)])
 
 
 def own_profiles(request):
@@ -125,6 +141,7 @@ def connect_info(request, pk):
         # Untuk simulator, auto-responder, dan simulasi OTA di halaman koneksi (tahap M5).
         device_info = {"name": device["name"], "board": device.get("board") or "sim",
                        "firmware": device.get("firmware_version") or "1.0.0",
+                       "mac": device.get("mac_address") or simulated_mac(token),
                        "variables": device.get("variables", [])}
 
     data = {

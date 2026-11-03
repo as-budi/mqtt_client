@@ -82,6 +82,18 @@ class SessionTests(TestCase):
         self.assertEqual(data["subscriptions"][0]["topic"], "iot/TOKEN123/desired")
         self.assertEqual(data["topics"]["telemetry"], "iot/TOKEN123/telemetry")
         api_get.assert_called_with(mock.ANY, "/api/v2/me/devices")
+        # Laporan firmware simulator memakai MAC tiruan yang tetap untuk token yang sama (platform tahap 24).
+        mac = data["device"]["mac"]
+        self.assertRegex(mac, r"^02(:[0-9A-F]{2}){5}$")
+        self.assertEqual(self.connect(self.device).json()["device"]["mac"], mac)
+
+    @mock.patch("connections.session.platform.api_get")
+    def test_platform_device_mac_is_reused(self, api_get):
+        """Device yang sudah melaporkan MAC (board sungguhan): simulator memakai MAC itu."""
+        api_get.return_value = {"broker": BROKER, "devices": [{**device(7), "mac_address": "24:6F:28:AA:BB:CC",
+                                                               "firmware_version": "1.2.0", "board": "esp32"}]}
+        info = self.connect(self.device).json()["device"]
+        self.assertEqual((info["mac"], info["firmware"], info["board"]), ("24:6F:28:AA:BB:CC", "1.2.0", "esp32"))
 
     @mock.patch("connections.session.platform.api_get")
     def test_connect_as_platform_device_errors(self, api_get):
