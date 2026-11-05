@@ -24,7 +24,7 @@ device lainnya; token tidak disimpan di database.
    - kotak centang *Acknowledge rule JSON automatically* (aktif secara bawaan);
    - **template balasan**, bawaan `{"publish": {{publish}}, "ok": true, "size": {{size}}}`,
      dengan placeholder `{{id}}` (nomor aturan), `{{publish}}`, `{{rev}}`, `{{size}}` (byte),
-     `{{rule}}` (nama aturan), `{{mac}}`. Teks di-escape seperti string JSON, jadi aman ditaruh
+     `{{rule}}` (nama aturan), `{{mac}}` (MAC device ini). Teks di-escape seperti string JSON, jadi aman ditaruh
      di dalam tanda kutip. Ubah menjadi `"ok": false, "error": "..."` untuk menguji status
      *Rejected* di platform;
    - tombol **Reply now**: mengirim template untuk JSON aturan terakhir yang diterima (berguna
@@ -34,9 +34,14 @@ device lainnya; token tidak disimpan di database.
 
    `handleRule()` / `readRule()` / `replyRule()` di `static/js/session.js` meniru firmware
    ESP32: pesan kosong (aturan dicabut) tidak dijawab; JSON rusak dijawab
-   `{"ok": false, "error": "invalid JSON"}` dan MAC di `device.mac` yang berbeda dijawab
-   `"MAC address does not match this device"` — keduanya selalu `ok: false`, tidak memakai
+   `{"ok": false, "error": "invalid JSON"}`; pesan tanpa `publish` atau `devices` dijawab
+   `ok: false` juga; dan bila `devices` memuat MAC tetapi bukan MAC device ini, dijawab
+   `"MAC address of this device is not in the rule"`. Semuanya selalu `ok: false`, tidak memakai
    template.
+
+   Bentuk pesan (sejak publish Full/Compact di platform): JSON aturan dengan kunci `publish` di
+   depan, sama untuk semua device — `{"publish": {"id", "rev"}, "name", "devices": [...], ...}`.
+   Nama aturan diambil dari `name`, dan device mengenali dirinya lewat MAC di `devices`.
 3. **Tombol contoh** *Rule ack* di daftar topik device (ganti `{id}` dengan nomor aturan) untuk
    mengirim tanda terima lewat form Publish biasa.
 

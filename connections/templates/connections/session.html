@@ -160,7 +160,7 @@
         </div>
         <textarea id="auto-rule-ack-template" class="form-control form-control-sm font-monospace mt-1 mb-1" rows="2" aria-label="Rule JSON reply">{"publish": {{"{{"}}publish}}, "ok": true, "size": {{"{{"}}size}}}</textarea>
         <div id="rule-reply-info" class="small text-muted" role="status"></div>
-        <p class="small text-muted mb-2">Reply placeholders: <code>{{"{{"}}id}}</code> rule, <code>{{"{{"}}publish}}</code>, <code>{{"{{"}}rev}}</code>, <code>{{"{{"}}size}}</code> bytes, <code>{{"{{"}}rule}}</code> name, <code>{{"{{"}}mac}}</code>. Use <code>"ok": false, "error": "..."</code> to test a rejection. Broken JSON or another device's MAC is always answered with <code>"ok": false</code>.</p>
+        <p class="small text-muted mb-2">Reply placeholders: <code>{{"{{"}}id}}</code> rule, <code>{{"{{"}}publish}}</code>, <code>{{"{{"}}rev}}</code>, <code>{{"{{"}}size}}</code> bytes, <code>{{"{{"}}rule}}</code> name, <code>{{"{{"}}mac}}</code> this device. Use <code>"ok": false, "error": "..."</code> to test a rejection. Broken JSON, or a rule whose <code>"devices"</code> does not list this device's MAC, is always answered with <code>"ok": false</code>.</p>
         <div class="d-flex flex-wrap align-items-center gap-2">
           <div class="form-check small mb-0">
             <input class="form-check-input" type="checkbox" id="auto-ota">

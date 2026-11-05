@@ -893,17 +893,19 @@
     return true;
   }
 
+  // Pesan aturan (sama untuk semua device): {"publish": {"id", "rev"}, ..., "devices": [{"name", "mac"}], ...}.
   function readRule(id, payload) {
     const rule = { id, problem: "", values: { id, publish: "null", rev: "", size: payload.length, rule: "", mac: "" } };
     let data = null;
     try { data = JSON.parse(new TextDecoder().decode(payload)); } catch (e) { rule.problem = "invalid JSON"; return rule; }
     // Teks disisipkan ke dalam string JSON template, jadi di-escape seperti JSON.
     const text = (value) => JSON.stringify(String(value == null ? "" : value)).slice(1, -1);
-    const publishId = data && data.publish && Number.isInteger(data.publish.id) ? data.publish.id : null;
+    const info = data && typeof data === "object" && data.publish && typeof data.publish === "object" ? data.publish : {};
+    const publishId = Number.isInteger(info.id) ? info.id : null;
     rule.values.publish = publishId === null ? "null" : publishId;
-    rule.values.rev = text(data && data.publish && data.publish.rev);
-    rule.values.rule = text(data && data.rule && data.rule.name);
-    rule.values.mac = text(data && data.device && data.device.mac);
+    rule.values.rev = text(info.rev);
+    rule.values.rule = text(data && data.name);
+    rule.values.mac = text(deviceInfo && deviceInfo.mac);
     rule.publish = publishId;
     rule.problem = ruleProblem(data);
     return rule;
@@ -938,14 +940,16 @@
   });
   $("rule-ack-reset").addEventListener("click", () => { $("auto-rule-ack-template").value = RULE_ACK_TEMPLATE; });
 
-  // Pemeriksaan sederhana seperti yang dilakukan device: bentuk pesan dan MAC penerima.
+  // Pemeriksaan sederhana seperti yang dilakukan device: bentuk pesan, lalu mencari dirinya
+  // di "devices" lewat MAC (hanya bila ada MAC di daftar dan MAC device ini diketahui).
   function ruleProblem(data) {
-    if (!data || typeof data !== "object" || data.type !== "rule") return 'not a rule message ("type": "rule")';
-    if (!data.rule || typeof data.rule !== "object") return "missing rule JSON";
+    if (!data || typeof data !== "object" || Array.isArray(data)) return "not a JSON object";
+    if (!data.publish || typeof data.publish !== "object") return 'missing "publish"';
+    if (!Array.isArray(data.devices)) return 'missing "devices"';
     const plain = (mac) => String(mac || "").replace(/[^0-9a-f]/gi, "").toUpperCase();
     const mine = plain(deviceInfo && deviceInfo.mac);
-    const target = plain(data.device && data.device.mac);
-    if (mine && target && mine !== target) return "MAC address does not match this device";
+    const macs = data.devices.map((d) => plain(d && d.mac)).filter(Boolean);
+    if (mine && macs.length && !macs.includes(mine)) return "MAC address of this device is not in the rule";
     return "";
   }
 

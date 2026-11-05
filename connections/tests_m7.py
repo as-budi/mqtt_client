@@ -63,4 +63,7 @@ class RuleAckPageTests(TestCase):
         self.assertIn("function handleRule(topic, payload)", script)
         self.assertIn('deviceTopics.rule_ack.replace("{id}", rule.id)', script)
         self.assertIn('$("auto-rule-ack-template").value', script)
+        # Pesan baru (Full/Compact): "publish" + "devices", device mengenali dirinya lewat MAC.
+        self.assertIn('if (!Array.isArray(data.devices)) return \'missing "devices"\';', script)
+        self.assertIn("rule.values.rule = text(data && data.name);", script)
         self.assertIn("if (handleRule(topic, payload)) return;", script)
