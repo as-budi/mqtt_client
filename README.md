@@ -26,7 +26,9 @@ Status: **tahap M7** (semua tahap rancangan selesai; panduan pasang di server: [
 | M5 | Sandbox, simulator device, auto-responder, simulasi OTA | mqtt_client + IoT_platform (tahap 23) | selesai ([docs](docs/tahap-m5-simulator-dan-sandbox.md)) |
 | M6 | Topic tree, grafik, MQTT 5, ekspor, CA sendiri | mqtt_client | selesai ([docs](docs/tahap-m6-analisis-pesan.md)) |
 | M7 | Menerima JSON aturan dari tombol Publish platform + tanda terima otomatis | mqtt_client | selesai ([docs](docs/tahap-m7-rule-json.md)) |
+| M8 | Payload JSON tampil seperti code editor IoT Platform (nomor baris, lipat/buka) | mqtt_client | selesai ([docs](docs/tahap-m8-penampil-json.md)) |
 | M7 | Deploy di VPS yang sama dengan platform | mqtt_client | selesai ([docs](docs/deploy.md)) |
+| M8 | Payload JSON tampil seperti code editor IoT Platform (nomor baris, lipat/buka) | mqtt_client | selesai ([docs](docs/tahap-m8-penampil-json.md)) |
 
 ## Menjalankan di laptop
 

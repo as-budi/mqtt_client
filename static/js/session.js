@@ -434,8 +434,19 @@
     if (activeTab === "charts") renderCharts();
   }
 
+  // Elemen pesan disimpan di objek pesan dan dipakai lagi selama tampilan (view) dan warnanya
+  // sama: daftar digambar ulang setiap ada pesan baru, dan tanpa cache ini blok JSON yang
+  // dilipat pengguna akan terbuka lagi (dan penampil JSON dibangun ulang ratusan kali).
   function messageElement(message, view) {
     const sub = message.direction === "in" ? subscriptionFor(message.topic) : null;
+    const key = `${view}|${sub ? sub.color : "blue"}|${sub && sub.muted ? 1 : 0}`;
+    if (message.element && message.elementKey === key) return message.element;
+    message.elementKey = key;
+    message.element = buildMessageElement(message, view, sub);
+    return message.element;
+  }
+
+  function buildMessageElement(message, view, sub) {
     const item = document.createElement("div");
     item.className = `message message-${message.direction} color-${sub ? sub.color : "blue"}`;
     const head = document.createElement("div");
@@ -459,11 +470,30 @@
       actionButton("Publish again", () => fillPublish(message.topic, decodeText(message.bytes) ?? "", message.qos, message.retain)),
     );
     head.append(arrow, topic, meta, actions);
+    item.append(head, payloadElement(message.bytes, view));
+    return item;
+  }
+
+  // Object/array JSON (tampilan Auto atau JSON): penampil seperti di IoT Platform, dengan nomor
+  // baris dan lipat/buka (static/js/json_viewer.js). Selain itu teks biasa seperti sebelumnya.
+  const JSON_TOOLBAR_LINES = 12;     // toolbar Expand/Collapse all hanya untuk JSON yang panjang
+  function payloadElement(bytes, view) {
+    if (bytes.length && (view === "auto" || view === "json") && window.JsonViewer) {
+      const text = decodeText(bytes);
+      let data;
+      try { data = text === null ? undefined : JSON.parse(text); } catch (e) { data = undefined; }
+      if (data !== null && typeof data === "object") {
+        const box = document.createElement("div");
+        box.className = "message-json";
+        const lines = JSON.stringify(data, null, 2).split("\n").length;
+        box.append(JsonViewer.create(data, { toolbar: lines > JSON_TOOLBAR_LINES }));
+        return box;
+      }
+    }
     const body = document.createElement("pre");
     body.className = "message-payload";
-    body.textContent = message.bytes.length ? show(message.bytes, view) : "(empty)";
-    item.append(head, body);
-    return item;
+    body.textContent = bytes.length ? show(bytes, view) : "(empty)";
+    return body;
   }
 
   function actionButton(label, onClick) {

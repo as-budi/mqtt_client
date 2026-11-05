@@ -152,3 +152,124 @@ ul.topic-tree li { padding: 0.1rem 0; }
 .chart-stats { font-size: 0.75rem; color: var(--app-muted); }
 .sparkline { width: 100%; height: 60px; display: block; }
 .sparkline polyline { fill: none; stroke: var(--app-accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
+
+/* ---------- Penampil JSON (static/js/json_viewer.js, sama dengan IoT Platform; tahap M8) ---------- */
+:root,
+[data-bs-theme="light"] {
+  --jv-key: #8b1e1e;
+  --jv-string: #1d4f91;
+  --jv-number: #23784a;
+  --jv-literal: #1e3a8a;
+  --jv-guide: #d0d5dd;
+}
+
+[data-bs-theme="dark"] {
+  --jv-key: #f2a7a0;
+  --jv-string: #8ab4f8;
+  --jv-number: #81c995;
+  --jv-literal: #a5b4fc;
+  --jv-guide: #3a404b;
+}
+
+.jv-toolbar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+/* Kotak bergulir: tinggi maksimal, gulir vertikal di dalam kotak. */
+.jv-view {
+  max-height: 32rem;
+  overflow: auto;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  border: 1px solid var(--app-border);
+  border-radius: 0.5rem;
+  background: var(--app-surface);
+  font-family: var(--bs-font-monospace, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+/* Satu baris: nomor | tombol lipat | garis kedalaman | isi.
+   Isi yang panjang dibungkus di kolomnya sendiri, rata dengan awal isi. */
+.jv-line {
+  display: flex;
+  align-items: stretch;
+}
+
+.jv-line:hover {
+  background: var(--app-surface-2, var(--bs-tertiary-bg));
+}
+
+.jv-num {
+  flex: 0 0 3.25rem;
+  padding-right: 0.75rem;
+  text-align: right;
+  color: var(--app-muted);
+  user-select: none;
+}
+
+.jv-fold {
+  flex: 0 0 1.1rem;
+  user-select: none;
+}
+
+.jv-guides {
+  display: flex;
+  flex: 0 0 auto;
+}
+
+/* Garis tegak per tingkat kedalaman, seperti di editor kode. */
+.jv-guide {
+  width: 1.75ch;
+  margin-left: 0.25ch;
+  border-left: 1px solid var(--jv-guide);
+}
+
+.jv-code {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.jv-key { color: var(--jv-key); }
+.jv-string { color: var(--jv-string); }
+.jv-number { color: var(--jv-number); }
+.jv-literal { color: var(--jv-literal); font-weight: 700; }
+
+.jv-toggle {
+  width: 1.1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--app-muted);
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.jv-toggle::before { content: "▾"; }
+.jv-collapsed > .jv-line .jv-toggle::before { content: "▸"; }
+.jv-toggle:hover { color: var(--bs-body-color); }
+
+/* Terlipat: anak-anak dan baris penutup disembunyikan, ringkasan "…} 5 keys" tampil. */
+.jv-summary { display: none; }
+.jv-collapsed > .jv-line .jv-summary { display: inline; }
+.jv-collapsed > .jv-children,
+.jv-collapsed > .jv-close { display: none; }
+
+.jv-count {
+  padding: 0 0.35rem;
+  border-radius: 0.5rem;
+  background: var(--app-surface-2, var(--bs-tertiary-bg));
+  color: var(--app-muted);
+  font-family: var(--bs-body-font-family);
+  font-size: 0.72rem;
+}
+
+/* Di daftar pesan: kotak lebih pendek dan huruf sedikit lebih kecil. */
+.message-json { margin-top: 0.25rem; }
+.message-json .jv-toolbar { margin-bottom: 0.2rem; font-size: 0.75rem; }
+.message-json .jv-toolbar .btn { font-size: 0.75rem; }
+.message-json .jv-view { max-height: 20rem; font-size: 0.78rem; line-height: 1.5; padding: 0.3rem 0.5rem 0.3rem 0; }
+.message-json .jv-num { flex-basis: 2.5rem; padding-right: 0.5rem; }
