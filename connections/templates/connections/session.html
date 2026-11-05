@@ -148,10 +148,19 @@
           <input class="form-check-input" type="checkbox" id="auto-desired">
           <label class="form-check-label" for="auto-desired">Report desired states back as telemetry</label>
         </div>
-        <div class="form-check small">
-          <input class="form-check-input" type="checkbox" id="auto-rule-ack" checked>
-          <label class="form-check-label" for="auto-rule-ack">Acknowledge rule JSON automatically</label>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="form-check small mb-0">
+            <input class="form-check-input" type="checkbox" id="auto-rule-ack" checked>
+            <label class="form-check-label" for="auto-rule-ack">Acknowledge rule JSON automatically</label>
+          </div>
+          <div class="d-flex gap-1">
+            <button type="button" id="rule-reply" class="btn btn-sm btn-outline-secondary" disabled title="Send the reply below for the last rule JSON received">Reply now</button>
+            <button type="button" id="rule-ack-reset" class="btn btn-sm btn-outline-secondary" title="Restore the default reply">Reset</button>
+          </div>
         </div>
+        <textarea id="auto-rule-ack-template" class="form-control form-control-sm font-monospace mt-1 mb-1" rows="2" aria-label="Rule JSON reply">{"publish": {{"{{"}}publish}}, "ok": true, "size": {{"{{"}}size}}}</textarea>
+        <div id="rule-reply-info" class="small text-muted" role="status"></div>
+        <p class="small text-muted mb-2">Reply placeholders: <code>{{"{{"}}id}}</code> rule, <code>{{"{{"}}publish}}</code>, <code>{{"{{"}}rev}}</code>, <code>{{"{{"}}size}}</code> bytes, <code>{{"{{"}}rule}}</code> name, <code>{{"{{"}}mac}}</code>. Use <code>"ok": false, "error": "..."</code> to test a rejection. Broken JSON or another device's MAC is always answered with <code>"ok": false</code>.</p>
         <div class="d-flex flex-wrap align-items-center gap-2">
           <div class="form-check small mb-0">
             <input class="form-check-input" type="checkbox" id="auto-ota">

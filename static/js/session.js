@@ -819,29 +819,72 @@
   // JSON aturan dari tombol "Publish to devices" di platform (tahap M7), topik
   // <prefix>/<token>/rules/<rule id>. Seperti firmware ESP32: parse, lalu kirim tanda terima ke
   // .../rules/<rule id>/ack. Pesan kosong = aturan dicabut (tidak dijawab). true = topik aturan.
+  //
+  // Balasan memakai template "auto-rule-ack-template" dengan placeholder {{id}}, {{publish}},
+  // {{rev}}, {{size}}, {{rule}}, {{mac}}. Pesan yang rusak atau untuk MAC lain dijawab
+  // otomatis dengan "ok": false (seperti device sungguhan), bukan dengan template.
+  let lastRule = null;         // aturan terakhir yang diterima, untuk tombol "Reply now"
+
   function handleRule(topic, payload) {
     if (!deviceTopics.rules || !deviceTopics.rule_ack) return false;
     const base = deviceTopics.rules.replace(/\+$/, "");
     if (!topic.startsWith(base)) return false;
     const id = topic.slice(base.length);
     if (!id || id.includes("/")) return true;            // .../rules/<id>/ack bukan untuk device
-    if (!payload.length || !$("auto-rule-ack").checked) return true;
-    const ack = { publish: null, ok: true, size: payload.length };
-    try {
-      const data = JSON.parse(new TextDecoder().decode(payload));
-      ack.publish = (data && data.publish && data.publish.id) || null;
-      const problem = ruleProblem(data);
-      if (problem) { ack.ok = false; ack.error = problem; }
-      else ack.rule = data.rule.name;
-    } catch (e) {
-      ack.ok = false;
-      ack.error = "invalid JSON";
+    if (!payload.length) {                               // dicabut: tidak ada yang perlu dijawab
+      if (lastRule && lastRule.id === id) setLastRule(null, `Rule ${id} was withdrawn.`);
+      return true;
     }
-    if (ack.publish === null) delete ack.publish;
-    publish(deviceTopics.rule_ack.replace("{id}", id), JSON.stringify(ack), 1, false,
-      { quiet: true, properties: null });
+    const rule = readRule(id, payload);
+    setLastRule(rule);
+    if ($("auto-rule-ack").checked) replyRule(rule);
     return true;
   }
+
+  function readRule(id, payload) {
+    const rule = { id, problem: "", values: { id, publish: "null", rev: "", size: payload.length, rule: "", mac: "" } };
+    let data = null;
+    try { data = JSON.parse(new TextDecoder().decode(payload)); } catch (e) { rule.problem = "invalid JSON"; return rule; }
+    // Teks disisipkan ke dalam string JSON template, jadi di-escape seperti JSON.
+    const text = (value) => JSON.stringify(String(value == null ? "" : value)).slice(1, -1);
+    const publishId = data && data.publish && Number.isInteger(data.publish.id) ? data.publish.id : null;
+    rule.values.publish = publishId === null ? "null" : publishId;
+    rule.values.rev = text(data && data.publish && data.publish.rev);
+    rule.values.rule = text(data && data.rule && data.rule.name);
+    rule.values.mac = text(data && data.device && data.device.mac);
+    rule.publish = publishId;
+    rule.problem = ruleProblem(data);
+    return rule;
+  }
+
+  function replyRule(rule) {
+    const topic = deviceTopics.rule_ack.replace("{id}", rule.id);
+    if (rule.problem) {
+      const ack = { ok: false, error: rule.problem, size: rule.values.size };
+      if (rule.publish !== null && rule.publish !== undefined) ack.publish = rule.publish;
+      return publish(topic, JSON.stringify(ack), 1, false, { quiet: true, properties: null });
+    }
+    const template = $("auto-rule-ack-template").value.trim() || RULE_ACK_TEMPLATE;
+    return publish(topic, template, 1, false, { quiet: true, values: rule.values, properties: null });
+  }
+
+  const RULE_ACK_TEMPLATE = '{"publish": {{publish}}, "ok": true, "size": {{size}}}';
+
+  function setLastRule(rule, note) {
+    lastRule = rule;
+    $("rule-reply").disabled = !rule;
+    const info = $("rule-reply-info");
+    if (!rule) { info.textContent = note || ""; return; }
+    const v = rule.values;
+    info.textContent = `Last: rule ${rule.id}` + (rule.publish != null ? `, publish #${rule.publish}` : "") +
+      `, ${v.size} bytes` + (rule.problem ? ` (${rule.problem})` : "");
+  }
+
+  $("rule-reply").addEventListener("click", () => {
+    if (!lastRule || !deviceTopics) return;
+    if (replyRule(lastRule)) $("rule-reply-info").textContent += " · replied";
+  });
+  $("rule-ack-reset").addEventListener("click", () => { $("auto-rule-ack-template").value = RULE_ACK_TEMPLATE; });
 
   // Pemeriksaan sederhana seperti yang dilakukan device: bentuk pesan dan MAC penerima.
   function ruleProblem(data) {

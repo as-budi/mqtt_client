@@ -53,9 +53,14 @@ class RuleAckPageTests(TestCase):
         response = self.client.get(reverse("connections:session", args=[self.device.pk]))
         self.assertContains(response, 'id="auto-rule-ack"')
         self.assertContains(response, "Acknowledge rule JSON automatically")
+        # Template balasan (placeholder {{publish}} tidak dimakan template Django), tombol Reply now dan Reset.
+        self.assertContains(response, '{"publish": {{publish}}, "ok": true, "size": {{size}}}')
+        self.assertContains(response, 'id="rule-reply"')
+        self.assertContains(response, 'id="rule-ack-reset"')
 
     def test_script_answers_rule_topic(self):
         script = (Path(settings.BASE_DIR) / "static" / "js" / "session.js").read_text()
         self.assertIn("function handleRule(topic, payload)", script)
-        self.assertIn('deviceTopics.rule_ack.replace("{id}", id)', script)
+        self.assertIn('deviceTopics.rule_ack.replace("{id}", rule.id)', script)
+        self.assertIn('$("auto-rule-ack-template").value', script)
         self.assertIn("if (handleRule(topic, payload)) return;", script)

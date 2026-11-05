@@ -20,15 +20,25 @@ device lainnya; token tidak disimpan di database.
    ditambah `{prefix}/{token}/rules/+` (QoS 1, ungu). Migrasi data
    `connections/0004_rule_topic_subscription` menambahkannya ke profil device platform yang
    sudah ada (sekali saja; profil broker biasa tidak disentuh).
-2. **Tanda terima otomatis** — kotak centang *Acknowledge rule JSON automatically* di bagian
-   otomatisasi device (halaman sesi, aktif secara bawaan). `handleRule()` di
-   `static/js/session.js` meniru firmware ESP32:
-   - pesan kosong (aturan dicabut) → tidak dijawab;
-   - JSON valid dengan `"type": "rule"` dan blok `rule` → `{"publish": <id>, "ok": true, "size": <byte>, "rule": "<nama>"}`;
-   - JSON rusak → `{"ok": false, "error": "invalid JSON"}`;
-   - MAC di `device.mac` berbeda dengan MAC device ini → `ok: false`, `"MAC address does not match this device"`.
+2. **Balasan otomatis dan manual** di bagian otomatisasi device (halaman sesi):
+   - kotak centang *Acknowledge rule JSON automatically* (aktif secara bawaan);
+   - **template balasan**, bawaan `{"publish": {{publish}}, "ok": true, "size": {{size}}}`,
+     dengan placeholder `{{id}}` (nomor aturan), `{{publish}}`, `{{rev}}`, `{{size}}` (byte),
+     `{{rule}}` (nama aturan), `{{mac}}`. Teks di-escape seperti string JSON, jadi aman ditaruh
+     di dalam tanda kutip. Ubah menjadi `"ok": false, "error": "..."` untuk menguji status
+     *Rejected* di platform;
+   - tombol **Reply now**: mengirim template untuk JSON aturan terakhir yang diterima (berguna
+     bila kotak centang dimatikan, mis. untuk menguji device yang tidak membalas lalu membalas
+     belakangan); tombol **Reset** mengembalikan template bawaan;
+   - baris info: aturan terakhir, nomor publish, ukuran, dan masalah bila ada.
+
+   `handleRule()` / `readRule()` / `replyRule()` di `static/js/session.js` meniru firmware
+   ESP32: pesan kosong (aturan dicabut) tidak dijawab; JSON rusak dijawab
+   `{"ok": false, "error": "invalid JSON"}` dan MAC di `device.mac` yang berbeda dijawab
+   `"MAC address does not match this device"` — keduanya selalu `ok: false`, tidak memakai
+   template.
 3. **Tombol contoh** *Rule ack* di daftar topik device (ganti `{id}` dengan nomor aturan) untuk
-   mengirim tanda terima secara manual, misalnya bila kotak centang dimatikan.
+   mengirim tanda terima lewat form Publish biasa.
 
 ## Uji coba
 
