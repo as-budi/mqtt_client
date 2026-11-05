@@ -652,6 +652,7 @@
         // Laporan firmware seperti template ESP32 di platform: versi, board, dan MAC address.
         ["Firmware", deviceTopics.firmware, JSON.stringify(firmwareReport()).replace(/,"/g, ', "').replace(/":/g, '": '), 0, false],
         ["Command response", deviceTopics.command_response, '{"success": true}', 1, false],
+        ["Rule ack", deviceTopics.rule_ack, '{"publish": 1, "ok": true}', 1, false],
       ];
     } else if (sandboxInfo) {
       $("device-topics-label").textContent = "Sandbox topics";
@@ -794,6 +795,7 @@
   // Pesan masuk untuk device: command (jawab otomatis, OTA) dan desired state (laporkan balik).
   function automate(topic, payload) {
     if (!deviceTopics) return;
+    if (handleRule(topic, payload)) return;
     let data = null;
     try { data = JSON.parse(new TextDecoder().decode(payload)); } catch (e) { return; }
     const commandBase = deviceTopics.commands.replace(/\+$/, "");
@@ -812,6 +814,44 @@
       // Desired state {"lamp": 1} -> device "menjalankan" lalu melaporkan keadaannya sebagai telemetri.
       publish(deviceTopics.telemetry, JSON.stringify(data), 0, false, { quiet: true, properties: null });
     }
+  }
+
+  // JSON aturan dari tombol "Publish to devices" di platform (tahap M7), topik
+  // <prefix>/<token>/rules/<rule id>. Seperti firmware ESP32: parse, lalu kirim tanda terima ke
+  // .../rules/<rule id>/ack. Pesan kosong = aturan dicabut (tidak dijawab). true = topik aturan.
+  function handleRule(topic, payload) {
+    if (!deviceTopics.rules || !deviceTopics.rule_ack) return false;
+    const base = deviceTopics.rules.replace(/\+$/, "");
+    if (!topic.startsWith(base)) return false;
+    const id = topic.slice(base.length);
+    if (!id || id.includes("/")) return true;            // .../rules/<id>/ack bukan untuk device
+    if (!payload.length || !$("auto-rule-ack").checked) return true;
+    const ack = { publish: null, ok: true, size: payload.length };
+    try {
+      const data = JSON.parse(new TextDecoder().decode(payload));
+      ack.publish = (data && data.publish && data.publish.id) || null;
+      const problem = ruleProblem(data);
+      if (problem) { ack.ok = false; ack.error = problem; }
+      else ack.rule = data.rule.name;
+    } catch (e) {
+      ack.ok = false;
+      ack.error = "invalid JSON";
+    }
+    if (ack.publish === null) delete ack.publish;
+    publish(deviceTopics.rule_ack.replace("{id}", id), JSON.stringify(ack), 1, false,
+      { quiet: true, properties: null });
+    return true;
+  }
+
+  // Pemeriksaan sederhana seperti yang dilakukan device: bentuk pesan dan MAC penerima.
+  function ruleProblem(data) {
+    if (!data || typeof data !== "object" || data.type !== "rule") return 'not a rule message ("type": "rule")';
+    if (!data.rule || typeof data.rule !== "object") return "missing rule JSON";
+    const plain = (mac) => String(mac || "").replace(/[^0-9a-f]/gi, "").toUpperCase();
+    const mine = plain(deviceInfo && deviceInfo.mac);
+    const target = plain(data.device && data.device.mac);
+    if (mine && target && mine !== target) return "MAC address does not match this device";
+    return "";
   }
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

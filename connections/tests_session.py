@@ -233,7 +233,8 @@ class PlatformDeviceTests(TestCase):
         self.assertEqual(profile.url, "wss://iot.example.org:443/mqtt")
         self.assertEqual(profile.username, "")                  # token tidak disimpan
         self.assertEqual([s.topic_filter for s in profile.subscriptions.all()],
-                         ["{prefix}/{token}/desired", "{prefix}/{token}/commands/+", "{prefix}/{token}/errors"])
+                         ["{prefix}/{token}/desired", "{prefix}/{token}/commands/+", "{prefix}/{token}/errors",
+                          "{prefix}/{token}/rules/+"])
         # Kedua kali: profil yang sama dibuka, tidak dibuat lagi.
         self.client.post(reverse("connections:platform_create", args=[7]))
         self.assertEqual(ConnectionProfile.objects.filter(platform_device_id=7).count(), 1)

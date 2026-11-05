@@ -12,8 +12,8 @@ di-*regenerate* di platform, profil tetap jalan.
 
 Topik langganan ditulis dengan {prefix} dan {token}, mis. "{prefix}/{token}/desired",
 dan diisi saat Connect. Hanya topik yang diizinkan ACL broker platform untuk device:
-desired, commands/+, errors (baca) serta telemetry, commands/<id>/response, firmware,
-status (tulis).
+desired, commands/+, errors, rules/+ (baca) serta telemetry, commands/<id>/response, firmware,
+status, rules/<id>/ack (tulis).
 """
 from urllib.parse import urlparse
 
@@ -34,6 +34,8 @@ DEVICE_SUBSCRIPTIONS = [
     ("{prefix}/{token}/desired", Qos.AT_LEAST_ONCE, Color.GREEN),
     ("{prefix}/{token}/commands/+", Qos.AT_LEAST_ONCE, Color.ORANGE),
     ("{prefix}/{token}/errors", Qos.AT_MOST_ONCE, Color.RED),
+    # JSON aturan dari tombol "Publish to devices" di platform (retained, tahap M7).
+    ("{prefix}/{token}/rules/+", Qos.AT_LEAST_ONCE, Color.PURPLE),
 ]
 
 
