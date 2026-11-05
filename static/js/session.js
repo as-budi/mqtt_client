@@ -537,7 +537,29 @@
     $("publish-payload").focus();
   }
 
+  // Format JSON: payload tampil seperti code editor (static/js/payload_editor.js, tahap M9).
+  // Baris error hanya ditandai bila payload tanpa placeholder (posisi error masih sama).
+  function jsonErrorLine(text) {
+    if (/\{\{/.test(text)) return null;
+    try { JSON.parse(text); return null; } catch (e) {
+      const message = String(e.message);
+      let match = message.match(/line (\d+) column \d+/i);
+      if (match) return Number(match[1]);
+      match = message.match(/position (\d+)/i);
+      return match ? text.slice(0, Number(match[1])).split("\n").length : null;
+    }
+  }
+  // var (bukan const): checkPayload() bisa saja dipanggil sebelum baris ini dijalankan.
+  var payloadEditor = window.PayloadEditor
+    ? PayloadEditor.attach($("publish-payload"), {
+      isJson: () => $("publish-format").value === "json",
+      prepare: (text) => expand(text, { counter: publishCounter + 1 }),
+      errorAt: jsonErrorLine,
+    })
+    : null;
+
   function checkPayload() {
+    if (payloadEditor) payloadEditor.refresh();
     const status = $("payload-status");
     if ($("publish-format").value !== "json") { status.textContent = ""; return true; }
     try {

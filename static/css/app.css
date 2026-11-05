@@ -273,3 +273,48 @@ ul.topic-tree li { padding: 0.1rem 0; }
 .message-json .jv-toolbar .btn { font-size: 0.75rem; }
 .message-json .jv-view { max-height: 20rem; font-size: 0.78rem; line-height: 1.5; padding: 0.3rem 0.5rem 0.3rem 0; }
 .message-json .jv-num { flex-basis: 2.5rem; padding-right: 0.5rem; }
+
+/* ---------- Editor payload JSON di kartu Publish (static/js/payload_editor.js, tahap M9) ---------- */
+.pe-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+.pe-bar .btn { padding: 0.05rem 0.6rem; font-size: 0.75rem; }
+.pe-hint { color: var(--app-muted); font-size: 0.72rem; }
+.pe-edit { position: relative; margin-bottom: 0.25rem; }
+.pe-gutter, .pe-highlight { display: none; }
+/* Aktif (format JSON): gutter nomor baris + teks berwarna di belakang textarea transparan.
+   Font, ukuran, tinggi baris, dan padding ketiganya harus sama persis. */
+.pe-active { --pe-gutter: 2.6rem; --pe-pad: 0.4rem; --pe-font: 0.8rem; --pe-line: 1.5; }
+.pe-active .pe-gutter,
+.pe-active .pe-highlight,
+.pe-active textarea {
+  font-family: var(--bs-font-monospace, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: var(--pe-font);
+  line-height: var(--pe-line);
+  tab-size: 2;
+}
+.pe-active .pe-gutter {
+  display: block; position: absolute; top: 1px; left: 1px; bottom: 1px; width: var(--pe-gutter);
+  padding: var(--pe-pad) 0.45rem var(--pe-pad) 0; overflow: hidden; text-align: right;
+  color: var(--app-muted); background: var(--bs-tertiary-bg); border-right: 1px solid var(--app-border);
+  border-radius: var(--bs-border-radius-sm) 0 0 var(--bs-border-radius-sm); user-select: none; z-index: 1;
+}
+.pe-active .pe-error-line { color: #dc3545; font-weight: 700; background: rgba(220, 53, 69, 0.12); }
+.pe-active .pe-highlight {
+  display: block; position: absolute; inset: 0; margin: 0; overflow: hidden; white-space: pre;
+  padding: var(--pe-pad) var(--pe-pad) var(--pe-pad) calc(var(--pe-gutter) + 0.5rem);
+  border: 1px solid transparent; color: var(--bs-body-color); pointer-events: none;
+}
+.pe-active textarea {
+  position: relative; display: block; width: 100%; min-height: 9rem; margin: 0 !important; resize: vertical;
+  white-space: pre; overflow: auto; background: transparent !important;
+  padding: var(--pe-pad) var(--pe-pad) var(--pe-pad) calc(var(--pe-gutter) + 0.5rem) !important;
+  color: transparent; caret-color: var(--bs-body-color);
+}
+.pe-active textarea::placeholder { color: var(--app-muted); }
+.pe-active textarea::selection { color: transparent; background: rgba(42, 120, 214, 0.25); }
+.pe-edit.pe-active { background: var(--app-surface); border-radius: var(--bs-border-radius-sm); }
+.pe-ph { color: #a5530a; background: rgba(245, 158, 11, 0.16); border-radius: 0.2rem; }
+[data-bs-theme="dark"] .pe-ph { color: #fbbf24; background: rgba(251, 191, 36, 0.14); }
+.pe-preview { margin-bottom: 0.25rem; }
+.pe-preview .jv-view { max-height: 20rem; font-size: 0.78rem; line-height: 1.5; }
+.pe-preview-empty { padding: 0.75rem; color: var(--app-muted); font-size: 0.8rem; border: 1px dashed var(--app-border); border-radius: 0.5rem; }
+.pe-preview-scalar { margin: 0; padding: 0.5rem; font-size: 0.8rem; border: 1px solid var(--app-border); border-radius: 0.5rem; }
