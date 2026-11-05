@@ -28,9 +28,11 @@ Status: **tahap M7** (semua tahap rancangan selesai; panduan pasang di server: [
 | M7 | Menerima JSON aturan dari tombol Publish platform + tanda terima otomatis | mqtt_client | selesai ([docs](docs/tahap-m7-rule-json.md)) |
 | M8 | Payload JSON tampil seperti code editor IoT Platform (nomor baris, lipat/buka) | mqtt_client | selesai ([docs](docs/tahap-m8-penampil-json.md)) |
 | M9 | Payload JSON di kartu Publish seperti code editor (nomor baris, warna, Preview berlipat) | mqtt_client | selesai ([docs](docs/tahap-m9-editor-payload.md)) |
+| M10 | Auto-responder tidak menjawab command yang sudah kedaluwarsa (`expires_at`) | mqtt_client | selesai ([docs](docs/tahap-m10-command-expiry.md)) |
 | M7 | Deploy di VPS yang sama dengan platform | mqtt_client | selesai ([docs](docs/deploy.md)) |
 | M8 | Payload JSON tampil seperti code editor IoT Platform (nomor baris, lipat/buka) | mqtt_client | selesai ([docs](docs/tahap-m8-penampil-json.md)) |
 | M9 | Payload JSON di kartu Publish seperti code editor (nomor baris, warna, Preview berlipat) | mqtt_client | selesai ([docs](docs/tahap-m9-editor-payload.md)) |
+| M10 | Auto-responder tidak menjawab command yang sudah kedaluwarsa (`expires_at`) | mqtt_client | selesai ([docs](docs/tahap-m10-command-expiry.md)) |
 
 ## Menjalankan di laptop
 

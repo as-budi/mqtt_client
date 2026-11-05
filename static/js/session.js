@@ -854,6 +854,13 @@
     if (topic.startsWith(commandBase) && !topic.endsWith("/response")) {
       const id = topic.slice(commandBase.length);
       const method = (data && data.method) || "";
+      // Seperti firmware: command yang sudah kedaluwarsa ("expires_at", Unix detik) tidak
+      // dijalankan dan tidak dijawab; platform sudah menandainya Expired.
+      if (commandExpired(data)) {
+        $("auto-command-info").textContent = `Command ${id} (${method}) had already expired: not answered.`;
+        return;
+      }
+      $("auto-command-info").textContent = "";
       const responseTopic = deviceTopics.command_response.replace("{id}", id);
       if (method === "ota" && $("auto-ota").checked) { simulateOta(responseTopic, data.params || {}); return; }
       if ($("auto-answer").checked) {
@@ -866,6 +873,12 @@
       // Desired state {"lamp": 1} -> device "menjalankan" lalu melaporkan keadaannya sebagai telemetri.
       publish(deviceTopics.telemetry, JSON.stringify(data), 0, false, { quiet: true, properties: null });
     }
+  }
+
+  const CLOCK_TOLERANCE_S = 2;    // sama dengan template firmware ESP32
+  function commandExpired(data) {
+    const expiresAt = data && Number(data.expires_at);
+    return Boolean(expiresAt) && Date.now() / 1000 > expiresAt + CLOCK_TOLERANCE_S;
   }
 
   // JSON aturan dari tombol "Publish to devices" di platform (tahap M7), topik

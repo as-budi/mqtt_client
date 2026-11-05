@@ -143,7 +143,8 @@
           <input class="form-check-input" type="checkbox" id="auto-answer">
           <label class="form-check-label" for="auto-answer">Answer commands automatically</label>
         </div>
-        <textarea id="auto-answer-template" class="form-control form-control-sm font-monospace mb-2" rows="2" aria-label="Command answer">{"success": true, "method": "{{"{{"}}method}}"}</textarea>
+        <textarea id="auto-answer-template" class="form-control form-control-sm font-monospace mb-1" rows="2" aria-label="Command answer">{"success": true, "method": "{{"{{"}}method}}"}</textarea>
+        <div id="auto-command-info" class="small text-muted mb-2" role="status"></div>
         <div class="form-check small">
           <input class="form-check-input" type="checkbox" id="auto-desired">
           <label class="form-check-label" for="auto-desired">Report desired states back as telemetry</label>
