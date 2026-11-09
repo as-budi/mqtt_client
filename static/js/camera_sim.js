@@ -41,6 +41,8 @@ window.CameraSim = (function () {
   let files = [];
   let fileIndex = 0;
   let stream = null;
+  let starting = null;          // Promise getUserMedia yang sedang berjalan
+  let webcamError = "";         // alasan webcam tidak bisa dipakai (ditampilkan saat memotret)
   const history = [];
 
   // ------------------------------------------------------------------ antarmuka
@@ -64,6 +66,7 @@ window.CameraSim = (function () {
     $("camera-now").addEventListener("click", () => run("device", ""));
     setInterval(tick, 1000);
     refreshPanel();
+    syncWebcam();     // browser bisa memulihkan pilihan "Webcam" setelah reload (tanpa event change)
   }
 
   function attach(info, topics) {
@@ -76,6 +79,7 @@ window.CameraSim = (function () {
     if (first && info && info.board === "esp32cam" && !enabled()) {
       $("camera-sim").checked = true;
       refreshPanel();
+      syncWebcam();
     }
   }
 
@@ -101,22 +105,49 @@ window.CameraSim = (function () {
   }
 
   // ------------------------------------------------------------------ webcam
-  async function syncWebcam() {
+  // Header Permissions-Policy server (nginx) bisa melarang kamera: camera=() .
+  function cameraBlockedByPolicy() {
+    const policy = document.permissionsPolicy || document.featurePolicy;
+    try { return Boolean(policy && policy.allowsFeature && !policy.allowsFeature("camera")); } catch (e) { return false; }
+  }
+
+  function syncWebcam() {
     const want = enabled() && $("camera-source").value === "webcam";
-    if (!want) { stopWebcam(); return; }
-    if (stream) return;
+    if (!want) { stopWebcam(); return Promise.resolve(false); }
+    if (stream) return Promise.resolve(true);
+    if (!starting) starting = startWebcam().finally(() => { starting = null; });
+    return starting;
+  }
+
+  async function startWebcam() {
+    webcamError = "";
     if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setStatus("The webcam needs HTTPS (or localhost) and a browser that supports it.", "danger");
-      return;
+      webcamError = "the webcam needs HTTPS (or localhost) and a browser that supports it";
+    } else if (cameraBlockedByPolicy()) {
+      webcamError = "the server forbids the camera (Permissions-Policy camera=()); update the nginx configuration of this app";
     }
+    if (webcamError) { setStatus(`Webcam: ${webcamError}.`, "danger"); return false; }
+    setStatus("Starting the webcam… allow the camera when the browser asks.", "muted");
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 } }, audio: false });
-      $("camera-video").srcObject = stream;
-      await $("camera-video").play();
+      const video = $("camera-video");
+      video.srcObject = stream;
+      await video.play();
+      // Ukuran gambar baru diketahui setelah bingkai pertama.
+      for (let i = 0; i < 30 && !video.videoWidth; i += 1) await new Promise((r) => setTimeout(r, 100));
+      if (!video.videoWidth) throw new Error("no picture from the camera");
       setStatus("Webcam on. It stays on while this option is selected.", "muted");
+      return true;
     } catch (err) {
-      stream = null;
-      setStatus(`Webcam not available: ${err.message || err.name}.`, "danger");
+      stopWebcam();
+      const reasons = {
+        NotAllowedError: "access was refused (allow the camera for this site in the browser's address bar)",
+        NotFoundError: "no camera found",
+        NotReadableError: "the camera is in use by another application",
+      };
+      webcamError = reasons[err.name] || err.message || err.name;
+      setStatus(`Webcam: ${webcamError}.`, "danger");
+      return false;
     }
   }
 
@@ -192,7 +223,8 @@ window.CameraSim = (function () {
     const source = $("camera-source").value;
     if (source === "webcam") {
       const video = $("camera-video");
-      if (!stream || !video.videoWidth) throw new Error("Webcam is not ready");
+      if (!stream || !video.videoWidth) await syncWebcam();     // belum dinyalakan: coba sekarang
+      if (!stream || !video.videoWidth) throw new Error(`Webcam not ready: ${webcamError || "still starting"}`);
       drawCover(ctx, video, video.videoWidth, video.videoHeight, w, h);
       stamp(ctx, w, h, label);
     } else if (source === "files") {
