@@ -87,6 +87,7 @@ window.CameraSim = (function () {
     if (!$("camera-sim")) return;
     const on = enabled();
     $("camera-options").classList.toggle("d-none", !on);
+    $("camera-badge").classList.toggle("d-none", !on);     // terlihat juga saat kartu dilipat
     const source = $("camera-source").value;
     $("camera-files-row").classList.toggle("d-none", source !== "files");
     $("camera-video").classList.toggle("d-none", !(on && source === "webcam"));

@@ -298,6 +298,12 @@
   function renderSubscriptions() {
     const list = $("subscriptions");
     list.textContent = "";
+    // Jumlah langganan di judul kartu: tetap terlihat saat kartu dilipat.
+    const badge = $("subscriptions-badge");
+    if (badge) {
+      badge.textContent = String(subscriptions.size);
+      badge.classList.toggle("d-none", !subscriptions.size);
+    }
     if (!subscriptions.size) {
       const li = document.createElement("li");
       li.className = "text-muted";
@@ -806,6 +812,7 @@
     $("repeat-toggle").textContent = "Start";
     $("repeat-toggle").classList.replace("btn-danger", "btn-outline-primary");
     $("repeat-status").textContent = repeatSent ? `Stopped after ${repeatSent} message(s).` : "";
+    $("repeat-badge").classList.add("d-none");
   }
   $("repeat-toggle").addEventListener("click", () => {
     if (repeatTimer) { stopRepeat(); return; }
@@ -826,6 +833,7 @@
     repeatTimer = setInterval(tick, seconds * 1000);
     $("repeat-toggle").textContent = "Stop";
     $("repeat-toggle").classList.replace("btn-outline-primary", "btn-danger");
+    $("repeat-badge").classList.remove("d-none");     // terlihat juga saat kartu Automation dilipat
   });
 
   // ---------------------------------------------------------------- simulator sensor device

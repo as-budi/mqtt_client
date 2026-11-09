@@ -46,8 +46,13 @@
 <div class="row g-3">
   {# ---------- Kolom kiri: langganan dan publish ---------- #}
   <div class="col-lg-5 col-xl-4">
-    <div class="card mb-3"><div class="card-body">
-      <div class="form-section-title mb-2">Subscriptions</div>
+    {# Kartu kolom kiri bisa dilipat (<details>, seperti JSON rule/Run on devices di IoT Platform); keadaannya diingat oleh static/js/fold_cards.js. #}
+    <details class="card mb-3 fold-card" id="card-subscriptions" open>
+      <summary class="card-body py-2 d-flex align-items-center gap-2">
+        <span class="form-section-title fold-title me-auto">Subscriptions</span>
+        <span id="subscriptions-badge" class="badge text-bg-light border fw-normal d-none"></span>
+      </summary>
+      <div class="card-body pt-0">
       <form id="subscribe-form" class="input-group input-group-sm mb-1" autocomplete="off">
         <input type="text" id="subscribe-topic" class="form-control font-monospace" placeholder="topic/#" aria-label="Topic filter">
         <select id="subscribe-qos" class="form-select flex-grow-0" style="width: 4.5rem" aria-label="QoS">
@@ -57,11 +62,15 @@
       </form>
       <div id="subscribe-error" class="text-danger small mb-1"></div>
       <ul id="subscriptions" class="list-unstyled mb-0 small"></ul>
-    </div></div>
+      </div>
+    </details>
 
-    <div class="card mb-3"><div class="card-body">
-      <div class="d-flex align-items-center justify-content-between mb-2">
-        <div class="form-section-title">Publish</div>
+    <details class="card mb-3 fold-card" id="card-publish" open>
+      <summary class="card-body py-2 d-flex align-items-center gap-2">
+        <span class="form-section-title fold-title me-auto">Publish</span>
+      </summary>
+      <div class="card-body pt-0">
+      <div class="d-flex justify-content-end mb-1">
         <div class="dropdown">
           <button class="btn btn-sm btn-link p-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Saved</button>
           <ul id="saved-menu" class="dropdown-menu dropdown-menu-end saved-menu"></ul>
@@ -121,11 +130,16 @@
         </div>
         <div id="publish-error" class="text-danger small mt-1"></div>
       </form>
-    </div></div>
+      </div>
+    </details>
 
     {# ---------- Otomasi (tahap M5) ---------- #}
-    <div class="card mb-3"><div class="card-body">
-      <div class="form-section-title mb-2">Automation</div>
+    <details class="card mb-3 fold-card" id="card-automation" open>
+      <summary class="card-body py-2 d-flex align-items-center gap-2">
+        <span class="form-section-title fold-title me-auto">Automation</span>
+        <span id="repeat-badge" class="badge text-bg-success fw-normal d-none">Repeating</span>
+      </summary>
+      <div class="card-body pt-0">
       <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
         <span class="small">Publish the message above every</span>
         <input type="number" id="repeat-seconds" class="form-control form-control-sm" style="width: 5rem" min="1" value="5" aria-label="Seconds between messages">
@@ -171,48 +185,55 @@
             <option value="success">Succeed</option><option value="fail">Fail</option>
           </select>
         </div>
+      </div>
+      </div>
+    </details>
 
-        {# ---------- Simulasi kamera ESP32-CAM (tahap M11, static/js/camera_sim.js) ---------- #}
-        <div id="camera-box" class="border-top pt-2 mt-2 d-none">
-          <div class="form-check small">
-            <input class="form-check-input" type="checkbox" id="camera-sim">
-            <label class="form-check-label" for="camera-sim">Simulate a camera (ESP32-CAM)</label>
+    {# ---------- Simulasi kamera ESP32-CAM (tahap M11, static/js/camera_sim.js): kartu sendiri, tampil hanya untuk device IoT Platform ---------- #}
+    <details class="card mb-3 fold-card d-none" id="camera-box" open>
+      <summary class="card-body py-2 d-flex align-items-center gap-2">
+        <span class="form-section-title fold-title me-auto">ESP32-CAM</span>
+        <span id="camera-badge" class="badge text-bg-success fw-normal d-none">Simulating</span>
+      </summary>
+      <div class="card-body pt-0">
+        <div class="form-check small">
+          <input class="form-check-input" type="checkbox" id="camera-sim">
+          <label class="form-check-label" for="camera-sim">Simulate a camera (ESP32-CAM)</label>
+        </div>
+        <div id="camera-options" class="d-none">
+          <p class="small text-muted mb-2">Answers the command <code>capture</code> with a picture uploaded to IoT Platform, and takes
+            pictures every <em>snapshot_interval</em> seconds. Uses the desired states <code>framesize</code>, <code>quality</code> and <code>flash</code>.</p>
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <select id="camera-source" class="form-select form-select-sm" style="width: 9.5rem" aria-label="Picture source">
+              <option value="pattern">Test pattern</option><option value="files">Image files</option><option value="webcam">Webcam</option>
+            </select>
+            <select id="camera-fault" class="form-select form-select-sm" style="width: 10rem" aria-label="Fault" title="Simulate a problem">
+              <option value="none">No fault</option>
+              <option value="camera_error">Camera error</option>
+              <option value="not_jpeg">Not a JPEG (415)</option>
+              <option value="too_large">Too large (413)</option>
+              <option value="no_answer">No answer</option>
+            </select>
           </div>
-          <div id="camera-options" class="d-none">
-            <p class="small text-muted mb-2">Answers the command <code>capture</code> with a picture uploaded to IoT Platform, and takes
-              pictures every <em>snapshot_interval</em> seconds. Uses the desired states <code>framesize</code>, <code>quality</code> and <code>flash</code>.</p>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-              <select id="camera-source" class="form-select form-select-sm" style="width: 9.5rem" aria-label="Picture source">
-                <option value="pattern">Test pattern</option><option value="files">Image files</option><option value="webcam">Webcam</option>
-              </select>
-              <select id="camera-fault" class="form-select form-select-sm" style="width: 10rem" aria-label="Fault" title="Simulate a problem">
-                <option value="none">No fault</option>
-                <option value="camera_error">Camera error</option>
-                <option value="not_jpeg">Not a JPEG (415)</option>
-                <option value="too_large">Too large (413)</option>
-                <option value="no_answer">No answer</option>
-              </select>
-            </div>
-            <div id="camera-files-row" class="mb-2 d-none">
-              <input type="file" id="camera-files" class="form-control form-control-sm" accept="image/*" multiple aria-label="Images">
-              <div id="camera-files-info" class="small text-muted"></div>
-            </div>
-            <video id="camera-video" class="camera-video mb-2 d-none" muted playsinline aria-label="Webcam"></video>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-              <span class="small">Every</span>
-              <input type="number" id="camera-interval" class="form-control form-control-sm" style="width: 5rem" min="0" value="0" aria-label="Seconds between pictures">
-              <span class="small">s (0 = only on request)</span>
-              <button type="button" id="camera-now" class="btn btn-sm btn-outline-primary ms-auto">Capture &amp; upload now</button>
-            </div>
-            <div id="camera-settings" class="small text-muted mb-2"></div>
-            <img id="camera-preview" class="camera-preview d-none mb-1" alt="Last simulated picture">
-            <div id="camera-status" class="small text-muted" role="status"></div>
-            <ul id="camera-history" class="list-unstyled small text-muted mb-1"></ul>
-            {% if config.urls.gallery %}<a class="small" href="{{ config.urls.gallery }}" target="_blank" rel="noopener">Snapshots on IoT Platform ↗</a>{% endif %}
+          <div id="camera-files-row" class="mb-2 d-none">
+            <input type="file" id="camera-files" class="form-control form-control-sm" accept="image/*" multiple aria-label="Images">
+            <div id="camera-files-info" class="small text-muted"></div>
           </div>
+          <video id="camera-video" class="camera-video mb-2 d-none" muted playsinline aria-label="Webcam"></video>
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            <span class="small">Every</span>
+            <input type="number" id="camera-interval" class="form-control form-control-sm" style="width: 5rem" min="0" value="0" aria-label="Seconds between pictures">
+            <span class="small">s (0 = only on request)</span>
+            <button type="button" id="camera-now" class="btn btn-sm btn-outline-primary ms-auto">Capture &amp; upload now</button>
+          </div>
+          <div id="camera-settings" class="small text-muted mb-2"></div>
+          <img id="camera-preview" class="camera-preview d-none mb-1" alt="Last simulated picture">
+          <div id="camera-status" class="small text-muted" role="status"></div>
+          <ul id="camera-history" class="list-unstyled small text-muted mb-1"></ul>
+          {% if config.urls.gallery %}<a class="small" href="{{ config.urls.gallery }}" target="_blank" rel="noopener">Snapshots on IoT Platform ↗</a>{% endif %}
         </div>
       </div>
-    </div></div>
+    </details>
   </div>
 
   {# ---------- Kolom kanan: pesan ---------- #}
@@ -258,4 +279,5 @@
 <script src="{% static 'js/payload_editor.js' %}"></script>
 <script src="{% static 'js/camera_sim.js' %}"></script>
 <script src="{% static 'js/session.js' %}"></script>
+<script src="{% static 'js/fold_cards.js' %}"></script>
 {% endblock %}

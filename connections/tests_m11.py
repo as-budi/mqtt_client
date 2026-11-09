@@ -123,3 +123,14 @@ class SnapshotProxyTests(TestCase):
         self.assertEqual(config["urls"]["gallery"], "https://iot.example.org/cameras/devices/7/")
         plain = self.client.get(reverse("connections:session", args=[self.plain.pk])).context["config"]
         self.assertIsNone(plain["urls"]["gallery"])
+
+    def test_session_cards_can_be_folded(self):
+        """Kartu kolom kiri berupa <details> yang bisa dilipat; kamera punya kartu sendiri."""
+        html = self.client.get(reverse("connections:session", args=[self.profile.pk])).content.decode()
+        for card in ("card-subscriptions", "card-publish", "card-automation", "camera-box"):
+            self.assertIn(f'id="{card}"', html)
+        self.assertEqual(html.count('class="card mb-3 fold-card'), 4)
+        self.assertIn("js/fold_cards.js", html)
+        automation = html[html.index('id="card-automation"'):html.index('id="camera-box"')]
+        self.assertNotIn('id="camera-sim"', automation)                      # kamera tidak lagi di Automation
+        self.assertNotIn("{#", html)

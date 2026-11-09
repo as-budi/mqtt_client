@@ -429,3 +429,11 @@ ul.topic-tree li { padding: 0.1rem 0; }
 /* Tautan Documentation di bilah atas. */
 .docs-link { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--app-muted); text-decoration: none; font-size: 0.875rem; }
 .docs-link:hover { color: var(--bs-body-color); }
+
+/* ---------- Kartu yang bisa dilipat di halaman koneksi (static/js/fold_cards.js) ---------- */
+.fold-card > summary { cursor: pointer; list-style: none; user-select: none; }
+.fold-card > summary::-webkit-details-marker { display: none; }
+.fold-card > summary .fold-title::before { content: "▸"; display: inline-block; width: 0.9rem; }
+.fold-card[open] > summary .fold-title::before { content: "▾"; }
+.fold-card > summary:hover .fold-title { color: var(--bs-body-color); }
+.fold-card:not([open]) > summary { border-radius: inherit; }

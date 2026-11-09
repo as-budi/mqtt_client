@@ -36,6 +36,7 @@ Status: **tahap M7** (semua tahap rancangan selesai; panduan pasang di server: [
 | M11 | Simulasi kamera ESP32-CAM: command `capture`, unggah snapshot lewat proxy server, snapshot berkala (pasangan platform tahap 27a) | mqtt_client | selesai ([docs](docs/tahap-m11-simulasi-kamera.md)) |
 | M12 | Gaya tampilan Standard / FILKOM per akun; FILKOM mengikuti warna FILKOM Apps; identitas Robotic and Embedded System Laboratory dan kaki halaman seperti IoT Platform | mqtt_client | selesai ([docs](docs/tahap-m12-gaya-filkom.md)) |
 | M13 | Dokumentasi pengguna `/docs/` seperti IoT Platform (menu bertingkat, pencarian, On this page) dan favicon | mqtt_client | selesai ([docs](docs/tahap-m13-dokumentasi-dan-favicon.md)) |
+| M14 | Kartu ESP32-CAM sendiri; kartu Subscriptions/Publish/Automation/ESP32-CAM bisa dilipat (diingat per browser) | mqtt_client | selesai ([docs](docs/tahap-m14-kartu-lipat.md)) |
 
 ## Menjalankan di laptop
 
