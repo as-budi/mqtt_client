@@ -8,7 +8,7 @@ menyambung ke broker MQTT mana pun:
 - broker TCP (`mqtt://` 1883, `mqtts://` 8883) lewat relay di server.
 
 Fiturnya: subscribe, publish, daftar pesan, profil koneksi, profil dari device platform dan akun
-MQTT sandbox, simulator device (auto-responder, OTA tiruan), pohon topik, grafik, MQTT 5, ekspor.
+MQTT sandbox, simulator device (auto-responder, OTA tiruan, kamera ESP32-CAM tiruan), pohon topik, grafik, MQTT 5, ekspor.
 Repo platform: `IoT_platform` (folder bersebelahan).
 
 Status: **tahap M7** (semua tahap rancangan selesai; panduan pasang di server: [docs/deploy.md](docs/deploy.md)). Rancangan lengkap ada di
@@ -33,6 +33,7 @@ Status: **tahap M7** (semua tahap rancangan selesai; panduan pasang di server: [
 | M8 | Payload JSON tampil seperti code editor IoT Platform (nomor baris, lipat/buka) | mqtt_client | selesai ([docs](docs/tahap-m8-penampil-json.md)) |
 | M9 | Payload JSON di kartu Publish seperti code editor (nomor baris, warna, Preview berlipat) | mqtt_client | selesai ([docs](docs/tahap-m9-editor-payload.md)) |
 | M10 | Auto-responder tidak menjawab command yang sudah kedaluwarsa (`expires_at`) | mqtt_client | selesai ([docs](docs/tahap-m10-command-expiry.md)) |
+| M11 | Simulasi kamera ESP32-CAM: command `capture`, unggah snapshot lewat proxy server, snapshot berkala (pasangan platform tahap 27a) | mqtt_client | selesai ([docs](docs/tahap-m11-simulasi-kamera.md)) |
 
 ## Menjalankan di laptop
 

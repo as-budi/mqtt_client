@@ -128,6 +128,12 @@ PLATFORM_TIMEOUT = float(os.getenv("PLATFORM_TIMEOUT", "10"))
 # biasanya tidak punya broker WebSocket, jadi templat itu disembunyikan.
 PLATFORM_MQTT_WS_URL = os.getenv("PLATFORM_MQTT_WS_URL", "").strip()
 
+# Simulasi kamera (tahap M11): unggahan snapshot dari halaman koneksi diteruskan ke platform.
+# Batas ukuran satu gambar di aplikasi ini (platform punya batasnya sendiri, bawaan 512 KB)
+# dan jumlah gambar per pengguna per menit (0 = tanpa batas).
+SNAPSHOT_PROXY_MAX_KB = int(os.getenv("SNAPSHOT_PROXY_MAX_KB", "1024"))
+SNAPSHOT_PROXY_PER_MINUTE = int(os.getenv("SNAPSHOT_PROXY_PER_MINUTE", "30"))
+
 
 # --- Relay WebSocket -> TCP (tahap M4) ----------------------------------------------
 # Broker mqtt:// dan mqtts:// dijangkau browser lewat relay (paket relay/, perintah

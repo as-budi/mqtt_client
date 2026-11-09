@@ -92,6 +92,10 @@ def session_page(request, pk):
             "savedDelete": reverse("connections:saved_delete", args=[0]),
             "relayStatus": reverse("connections:relay_status", args=[0]),
             "edit": reverse("connections:edit", args=[profile.pk]),
+            # Tahap M11: unggahan snapshot simulasi kamera, dan galeri snapshot device di platform.
+            "snapshot": reverse("connections:snapshot", args=[profile.pk]),
+            "gallery": (f"{settings.PLATFORM_URL}/cameras/devices/{profile.platform_device_id}/"
+                        if profile.platform_device_id is not None else None),
         },
     }
     return render(request, "connections/session.html", {"profile": profile, "config": config})

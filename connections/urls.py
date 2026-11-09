@@ -1,7 +1,7 @@
 """Profil koneksi. Semua diawali /connections/ (lihat config/urls.py)."""
 from django.urls import path
 
-from . import platform_devices, relay_api, saved, session, views
+from . import platform_devices, relay_api, saved, session, snapshot, views
 
 app_name = "connections"
 
@@ -15,6 +15,8 @@ urlpatterns = [
     path("<int:pk>/", session.session_page, name="session"),
     path("<int:pk>/connect/", session.connect_info, name="connect"),
     path("<int:pk>/saved/", saved.saved_list, name="saved"),
+    # Tahap M11: unggahan snapshot simulasi kamera, diteruskan ke IoT Platform.
+    path("<int:pk>/snapshot/", snapshot.upload, name="snapshot"),
     path("saved/<int:pk>/delete/", saved.saved_delete, name="saved_delete"),
     # Tahap M3: profil dari device IoT Platform.
     path("platform/", platform_devices.device_list, name="platform"),

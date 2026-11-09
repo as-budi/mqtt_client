@@ -171,6 +171,46 @@
             <option value="success">Succeed</option><option value="fail">Fail</option>
           </select>
         </div>
+
+        {# ---------- Simulasi kamera ESP32-CAM (tahap M11, static/js/camera_sim.js) ---------- #}
+        <div id="camera-box" class="border-top pt-2 mt-2 d-none">
+          <div class="form-check small">
+            <input class="form-check-input" type="checkbox" id="camera-sim">
+            <label class="form-check-label" for="camera-sim">Simulate a camera (ESP32-CAM)</label>
+          </div>
+          <div id="camera-options" class="d-none">
+            <p class="small text-muted mb-2">Answers the command <code>capture</code> with a picture uploaded to IoT Platform, and takes
+              pictures every <em>snapshot_interval</em> seconds. Uses the desired states <code>framesize</code>, <code>quality</code> and <code>flash</code>.</p>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+              <select id="camera-source" class="form-select form-select-sm" style="width: 9.5rem" aria-label="Picture source">
+                <option value="pattern">Test pattern</option><option value="files">Image files</option><option value="webcam">Webcam</option>
+              </select>
+              <select id="camera-fault" class="form-select form-select-sm" style="width: 10rem" aria-label="Fault" title="Simulate a problem">
+                <option value="none">No fault</option>
+                <option value="camera_error">Camera error</option>
+                <option value="not_jpeg">Not a JPEG (415)</option>
+                <option value="too_large">Too large (413)</option>
+                <option value="no_answer">No answer</option>
+              </select>
+            </div>
+            <div id="camera-files-row" class="mb-2 d-none">
+              <input type="file" id="camera-files" class="form-control form-control-sm" accept="image/*" multiple aria-label="Images">
+              <div id="camera-files-info" class="small text-muted"></div>
+            </div>
+            <video id="camera-video" class="camera-video mb-2 d-none" muted playsinline aria-label="Webcam"></video>
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+              <span class="small">Every</span>
+              <input type="number" id="camera-interval" class="form-control form-control-sm" style="width: 5rem" min="0" value="0" aria-label="Seconds between pictures">
+              <span class="small">s (0 = only on request)</span>
+              <button type="button" id="camera-now" class="btn btn-sm btn-outline-primary ms-auto">Capture &amp; upload now</button>
+            </div>
+            <div id="camera-settings" class="small text-muted mb-2"></div>
+            <img id="camera-preview" class="camera-preview d-none mb-1" alt="Last simulated picture">
+            <div id="camera-status" class="small text-muted" role="status"></div>
+            <ul id="camera-history" class="list-unstyled small text-muted mb-1"></ul>
+            {% if config.urls.gallery %}<a class="small" href="{{ config.urls.gallery }}" target="_blank" rel="noopener">Snapshots on IoT Platform ↗</a>{% endif %}
+          </div>
+        </div>
       </div>
     </div></div>
   </div>
@@ -216,5 +256,6 @@
 <script src="{% static 'vendor/mqtt.min.js' %}"></script>
 <script src="{% static 'js/json_viewer.js' %}"></script>
 <script src="{% static 'js/payload_editor.js' %}"></script>
+<script src="{% static 'js/camera_sim.js' %}"></script>
 <script src="{% static 'js/session.js' %}"></script>
 {% endblock %}

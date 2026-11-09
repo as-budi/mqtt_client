@@ -158,6 +158,7 @@
     deviceInfo = info.device;
     sandboxInfo = info.sandbox;
     showDeviceTopics();
+    CameraSim.attach(deviceInfo, deviceTopics);     // tahap M11
     // Connect pertama: ganti langganan tersimpan dengan versi yang sudah diisi server
     // (status mute dari halaman ini dipertahankan). Reconnect: daftar di halaman yang berlaku.
     if (!presetsApplied) {
@@ -863,17 +864,33 @@
       $("auto-command-info").textContent = "";
       const responseTopic = deviceTopics.command_response.replace("{id}", id);
       if (method === "ota" && $("auto-ota").checked) { simulateOta(responseTopic, data.params || {}); return; }
+      // Tahap M11: "capture" dijawab simulator kamera setelah gambar diunggah.
+      if (CameraSim.handles(method)) { CameraSim.capture(id, responseTopic); return; }
       if ($("auto-answer").checked) {
         publish(responseTopic, $("auto-answer-template").value, 1, false,
           { quiet: true, values: { id, method }, properties: null });
       }
       return;
     }
-    if (topic === deviceTopics.desired && $("auto-desired").checked && data && typeof data === "object") {
+    if (topic === deviceTopics.desired && data && typeof data === "object") {
+      const reportAll = $("auto-desired").checked;
+      // Tahap M11: snapshot_interval, framesize, quality, flash dipakai simulator kamera. Bila
+      // "Report desired states" mati, simulator kamera melaporkan kunci kamera sendiri (seperti firmware).
+      CameraSim.desired(data, !reportAll);
       // Desired state {"lamp": 1} -> device "menjalankan" lalu melaporkan keadaannya sebagai telemetri.
-      publish(deviceTopics.telemetry, JSON.stringify(data), 0, false, { quiet: true, properties: null });
+      if (reportAll) publish(deviceTopics.telemetry, JSON.stringify(data), 0, false, { quiet: true, properties: null });
     }
   }
+
+  // ---------------------------------------------------------------- simulasi kamera (tahap M11)
+  CameraSim.init({
+    csrfToken,
+    urls: config.urls,
+    connected: () => Boolean(client && client.connected),
+    publish: (topic, body) => publish(topic, JSON.stringify(body), 1, false, { quiet: true, properties: null }),
+    report: (body) => deviceTopics && publish(deviceTopics.telemetry, JSON.stringify(body), 0, false,
+      { quiet: true, properties: null }),
+  });
 
   const CLOCK_TOLERANCE_S = 2;    // sama dengan template firmware ESP32
   function commandExpired(data) {
