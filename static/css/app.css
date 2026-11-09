@@ -87,6 +87,23 @@ h1, .h1, h2, .h2, h3, .h3 { font-weight: 650; letter-spacing: -0.01em; }
 .theme-switch .btn { color: var(--app-muted); border: 0; }
 .theme-switch .btn.active { color: var(--app-accent); background: var(--app-accent-soft); }
 
+/* Pilihan gaya Standard / FILKOM (templates/includes/ui_style_switch.html), sama dengan platform. */
+.ui-style-switch {
+  padding: 2px;
+  border: 1px solid var(--app-border);
+  border-radius: 0.6rem;
+}
+.ui-style-switch .btn {
+  padding: 0.15rem 0.55rem;
+  border: 0;
+  border-radius: 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-muted);
+}
+.ui-style-switch .btn:hover { color: var(--bs-body-color); }
+.ui-style-switch .btn.active { color: var(--app-accent); background: var(--app-accent-soft); }
+
 /* ---------- Halaman depan ---------- */
 .hero { max-width: 640px; margin: 3rem auto; text-align: center; }
 .hero .brand-mark { width: 56px; height: 56px; border-radius: 16px; }

@@ -11,6 +11,8 @@ import os
 import sys
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -65,6 +67,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "accounts.context_processors.platform",
+                # Gaya tampilan Standard / FILKOM (`ui_style`, `ui_style_selectable`).
+                "accounts.context_processors.ui_style",
             ],
         },
     },
@@ -105,6 +109,17 @@ CSRF_COOKIE_NAME = "mqttc_csrftoken"
 # Sesi di database server (bawaan Django): token IoT Platform yang disimpan di sesi
 # tidak pernah dikirim ke browser; cookie hanya berisi id sesi acak.
 SESSION_COOKIE_AGE = 14 * 24 * 3600     # sama dengan umur refresh token platform
+
+
+# --- Gaya tampilan -----------------------------------------------------------------
+# UI_STYLE = gaya bawaan untuk pengunjung dan akun yang belum memilih: "standard" (biru, sama
+# dengan IoT Platform) atau "filkom" (warna FILKOM Apps, filkom.ub.ac.id/legacy/apps).
+# UI_STYLE_SELECTABLE=False menyembunyikan pilihan; semua akun memakai UI_STYLE.
+UI_STYLES = ("standard", "filkom")
+UI_STYLE = os.getenv("UI_STYLE", "standard").strip().lower() or "standard"
+if UI_STYLE not in UI_STYLES:
+    raise ImproperlyConfigured(f"UI_STYLE in .env must be standard or filkom (got {UI_STYLE!r}).")
+UI_STYLE_SELECTABLE = os.getenv("UI_STYLE_SELECTABLE", "True") == "True"
 
 
 # --- IoT Platform (penyedia login, OpenID Connect) ------------------------------

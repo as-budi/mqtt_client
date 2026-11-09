@@ -5,6 +5,7 @@ Halaman depan, login lewat IoT Platform, dan logout.
     GET  /login/           mulai login (?signup=1 = langsung ke Sign up platform; ?next=...)
     GET  /oidc/callback/   platform mengembalikan pengguna ke sini dengan ?code=&state=
     POST /logout/          keluar dari aplikasi ini (platform=1: dari IoT Platform juga)
+    POST /ui-style/        gaya tampilan Standard / FILKOM untuk akun ini
 """
 import logging
 
@@ -13,6 +14,7 @@ from authlib.integrations.base_client import OAuthError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -31,6 +33,17 @@ def safe_next(request, url):
                                                require_https=request.is_secure()):
         return url
     return ""
+
+
+@login_required
+@require_POST
+def ui_style(request):
+    """Simpan gaya tampilan (Standard / FILKOM) untuk akun ini, lalu kembali ke halaman asal."""
+    style = request.POST.get("style", "")
+    if settings.UI_STYLE_SELECTABLE and style in settings.UI_STYLES:
+        request.user.ui_style = style
+        request.user.save(update_fields=["ui_style"])
+    return redirect(safe_next(request, request.POST.get("next", "")) or settings.LOGIN_REDIRECT_URL)
 
 
 # require_safe = GET dan HEAD: pemeriksaan seperti `curl -I` dan pemantau uptime memakai HEAD.

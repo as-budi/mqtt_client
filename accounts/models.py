@@ -13,10 +13,17 @@ from django.db import models
 
 
 class User(AbstractUser):
+    class UiStyle(models.TextChoices):
+        STANDARD = "standard", "Standard"
+        FILKOM = "filkom", "FILKOM"
+
     platform_sub = models.CharField(
         "IoT Platform user id", max_length=64, unique=True, null=True, blank=True,
         help_text="The \"sub\" claim from IoT Platform. Empty for local admin accounts.",
     )
+
+    # Gaya tampilan pilihan pengguna; kosong = gaya bawaan situs (.env UI_STYLE).
+    ui_style = models.CharField("interface style", max_length=10, choices=UiStyle.choices, blank=True)
 
     @property
     def display_name(self):

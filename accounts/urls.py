@@ -11,4 +11,5 @@ urlpatterns = [
     # Alamat ini didaftarkan di platform sebagai redirect URI (harus sama persis).
     path("oidc/callback/", views.callback, name="callback"),
     path("logout/", views.logout_view, name="logout"),
+    path("ui-style/", views.ui_style, name="ui_style"),
 ]

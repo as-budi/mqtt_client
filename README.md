@@ -34,6 +34,7 @@ Status: **tahap M7** (semua tahap rancangan selesai; panduan pasang di server: [
 | M9 | Payload JSON di kartu Publish seperti code editor (nomor baris, warna, Preview berlipat) | mqtt_client | selesai ([docs](docs/tahap-m9-editor-payload.md)) |
 | M10 | Auto-responder tidak menjawab command yang sudah kedaluwarsa (`expires_at`) | mqtt_client | selesai ([docs](docs/tahap-m10-command-expiry.md)) |
 | M11 | Simulasi kamera ESP32-CAM: command `capture`, unggah snapshot lewat proxy server, snapshot berkala (pasangan platform tahap 27a) | mqtt_client | selesai ([docs](docs/tahap-m11-simulasi-kamera.md)) |
+| M12 | Gaya tampilan Standard / FILKOM per akun; FILKOM mengikuti warna FILKOM Apps | mqtt_client | selesai ([docs](docs/tahap-m12-gaya-filkom.md)) |
 
 ## Menjalankan di laptop
 
