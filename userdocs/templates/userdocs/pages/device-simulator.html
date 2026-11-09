@@ -1,0 +1,49 @@
+<p>On a connection made from an IoT Platform device, the <em>Automation</em> card has a <strong>Behave like the device</strong> part. It lets
+this page act like the firmware templates of IoT Platform, so you can try dashboards, rules, commands and firmware updates without an ESP32.</p>
+
+<h2 id="sensors">Simulated sensors</h2>
+<p><em>Simulate sensors</em> fills the Publish card with the device's telemetry topic and a payload built from its variables on IoT Platform:
+  <code>{% templatetag openvariable %}random:min:max}}</code> using each sensor's limits (0–100 when none are set), and
+  <code>{% templatetag openvariable %}int:0:1}}</code> for on/off sensors. Actuators are left out. Press <em>Start</em> next to <em>Publish the message
+  above every N s</em> to send it repeatedly; the values appear on IoT Platform and in the <em>Charts</em> tab here.</p>
+
+<h2 id="commands">Answering commands</h2>
+<p>With <em>Answer commands automatically</em>, every command received on <code>…/commands/&lt;id&gt;</code> is answered on
+  <code>…/commands/&lt;id&gt;/response</code> with the template below the option, by default
+  <code>{"success": true, "method": "{% templatetag openvariable %}method}}"}</code>. The template may use <code>{% templatetag openvariable %}id}}</code> and
+  <code>{% templatetag openvariable %}method}}</code>. Change it to <code>{"success": false, "error": "…"}</code> to test a failing device.</p>
+<p>Like the ESP32 firmware, a command whose <code>expires_at</code> has already passed (by more than two seconds on your computer's clock) is
+  neither run nor answered; the line under the template says so. IoT Platform has already marked it <em>Expired</em>.</p>
+
+<h2 id="requested-states">Requested states</h2>
+<p>With <em>Report desired states back as telemetry</em>, a requested state such as <code>{"lamp": 1}</code> received on <code>…/desired</code>
+  is sent back on the telemetry topic, as a device does after switching. On IoT Platform the actuator turns <em>In sync</em>.</p>
+
+<h2 id="rule-json">Rule JSON</h2>
+<p><em>Publish to devices</em> on a rule page of IoT Platform sends the whole rule as JSON to <code>…/rules/&lt;id&gt;</code> (retained).
+  With <em>Acknowledge rule JSON automatically</em> (on by default), the page answers on <code>…/rules/&lt;id&gt;/ack</code> with the reply template,
+  by default <code>{"publish": {% templatetag openvariable %}publish}}, "ok": true, "size": {% templatetag openvariable %}size}}}</code>.</p>
+<table class="table table-sm">
+  <thead><tr><th>Placeholder</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td><code>{% templatetag openvariable %}id}}</code></td><td>rule number</td></tr>
+    <tr><td><code>{% templatetag openvariable %}publish}}</code>, <code>{% templatetag openvariable %}rev}}</code></td><td>publish number and revision from the message</td></tr>
+    <tr><td><code>{% templatetag openvariable %}size}}</code></td><td>size of the JSON in bytes</td></tr>
+    <tr><td><code>{% templatetag openvariable %}rule}}</code></td><td>rule name</td></tr>
+    <tr><td><code>{% templatetag openvariable %}mac}}</code></td><td>MAC address of this device</td></tr>
+  </tbody>
+</table>
+<p>Use <code>"ok": false, "error": "…"</code> to test a rejection. Broken JSON, or a rule whose <code>devices</code> does not include this device's MAC
+  address, is always answered with <code>"ok": false</code>. <em>Reply now</em> sends the template for the last rule received (handy when the automatic
+  answer is off); <em>Reset</em> restores the default template.</p>
+
+<h2 id="firmware-updates">Firmware updates</h2>
+<p>With <em>Simulate firmware updates (OTA)</em>, an <code>ota</code> command is accepted and followed by progress reports on <code>…/firmware</code>, like
+  the ESP32 firmware: <code>DOWNLOADING</code> 0–100 %, <code>DOWNLOADED</code>, <code>VERIFIED</code>, <code>UPDATING</code>, and finally the new version with
+  board and MAC address. Choose <em>Fail</em> to stop at 50 % with <code>FAILED</code>. Start the update from the firmware page of IoT Platform and
+  watch its status there.</p>
+<p>The MAC address is the one IoT Platform knows for the device, or, if it has none yet, a made-up address that stays the same for the
+  device (starting with <code>02:</code>).</p>
+
+<h2 id="answers-in-list">Automatic messages in the list</h2>
+<p>Automatic answers and reports appear in the message list as published messages (↑), but not in the Publish history.</p>

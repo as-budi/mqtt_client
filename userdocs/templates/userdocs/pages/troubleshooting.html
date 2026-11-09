@@ -1,0 +1,55 @@
+<p>The reason a connection failed is shown above the connection page. The most common ones:</p>
+
+<h2 id="connection">The connection does not open</h2>
+<table class="table table-sm">
+  <thead><tr><th>Message</th><th>What to check</th></tr></thead>
+  <tbody>
+    <tr><td><em>Could not open wss://…</em></td><td>host, port and WebSocket path (<code>/mqtt</code> or <code>/</code>); whether the broker has a WebSocket port at all.
+      Without one, use <code>mqtt://</code> or <code>mqtts://</code> (relay)</td></tr>
+    <tr><td><em>Wrong username or password</em></td><td>the password typed on the page; for device connections, whether the device is still active on IoT Platform</td></tr>
+    <tr><td><em>Not authorized</em></td><td>the broker refuses this login, e.g. the IoT Platform broker with a deactivated device</td></tr>
+    <tr><td>Nothing happens on an <code>https</code> page with <code>ws://</code></td><td>browsers block unencrypted WebSockets from secure pages; use <code>wss://</code></td></tr>
+    <tr><td><em>Reconnecting in N s</em></td><td>the broker or the network is unreachable for now; the page keeps trying</td></tr>
+  </tbody>
+</table>
+
+<h2 id="relay">Relay messages (<code>mqtt://</code>, <code>mqtts://</code>)</h2>
+<table class="table table-sm">
+  <thead><tr><th>Message</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><em>The relay may not connect to this address</em></td><td>the port is not allowed (only {% for port in relay.ports %}{{ port }}{% if not forloop.last %} and {% endif %}{% endfor %}), or the address is in a private network</td></tr>
+    <tr><td><em>The broker could not be reached</em></td><td>wrong host name, or the broker is down</td></tr>
+    <tr><td><em>The TLS handshake with the broker failed</em></td><td>the broker's certificate is self-signed or from an unknown CA: paste its CA certificate in the profile (<a href="{% url 'userdocs:page' 'connections' %}#certificates">Certificates</a>)</td></tr>
+    <tr><td><em>You have too many relay connections open</em></td><td>close other tabs that use the relay (at most {{ relay.per_user }} at a time)</td></tr>
+    <tr><td><em>The connection ticket expired</em></td><td>connect again (a ticket is valid for one minute)</td></tr>
+    <tr><td><em>The relay is busy</em></td><td>the server is at its limit; try again shortly</td></tr>
+  </tbody>
+</table>
+
+<h2 id="subscriptions">Subscriptions and messages</h2>
+<ul>
+  <li><strong><em>refused</em> next to a subscription</strong>: the broker does not allow that topic for your login. A device on IoT Platform may only use
+    its own topics; a sandbox account only <code>sandbox/&lt;you&gt;/#</code> and <code>sandbox/public/#</code>.</li>
+  <li><strong>Messages do not appear</strong>: check that a subscription matches the topic exactly (case matters), that it is not muted, that
+    <em>Pause</em> is off and that the filter is empty.</li>
+  <li><strong>An old value keeps coming back</strong>: it is a retained message. Remove it with <em>Clear retained</em>.</li>
+  <li><strong>A device connection kicks out the real device</strong>: an IoT Platform device and this page may be connected at the same time, but rules
+    and dashboards see both as the same device. Disconnect one of them when testing.</li>
+</ul>
+
+<h2 id="sign-in">Signing in and IoT Platform</h2>
+<ul>
+  <li><strong><em>Your IoT Platform session has ended</em></strong>: sign in again. This happens after you sign out of IoT Platform, revoke this app under
+    <em>Connected apps</em>, or your account is deactivated.</li>
+  <li><strong><em>Sign in again to allow</em></strong>: a newer feature needs an extra permission; sign out and sign in again, then choose <em>Allow</em>.</li>
+  <li><strong><em>IoT Platform cannot be reached</em></strong>: the platform is temporarily down. Connections to other brokers keep working.</li>
+  <li><strong><em>You need Editor access to this device</em></strong>: ask the owner to share the device with you as Editor.</li>
+</ul>
+
+<h2 id="camera">Camera simulator</h2>
+<ul>
+  <li><strong><em>Webcam: access was refused</em></strong>: allow the camera for this site via the icon in the browser's address bar, then choose the source again.</li>
+  <li><strong><em>the server forbids the camera</em></strong>: this server's configuration blocks the camera; ask the administrator.</li>
+  <li><strong><em>the webcam needs HTTPS</em></strong>: open the app over <code>https://</code> (or <code>localhost</code>).</li>
+  <li><strong>413 / 429 from IoT Platform</strong>: the picture is too large (lower <code>framesize</code> or <code>quality</code>) or sent too often.</li>
+</ul>

@@ -1,0 +1,42 @@
+<p><strong>Connections → From IoT Platform</strong> lists the devices you own and those shared with you on
+<a href="{{ platform_url }}/" target="_blank" rel="noopener">IoT Platform</a>, and your MQTT sandbox account.</p>
+
+<h2 id="device-connection">Connecting as a device</h2>
+<p><em>Create connection</em> next to a device makes a profile that:</p>
+<ul>
+  <li>uses the IoT Platform broker{% if platform_ws %} (<code>{{ platform_ws }}</code>){% endif %};</li>
+  <li>logs in as the device (username and password = its access token);</li>
+  <li>subscribes to the device's <code>desired</code>, <code>commands/+</code>, <code>errors</code> and <code>rules/+</code> topics.</li>
+</ul>
+<p>You need the <strong>Editor</strong> role on a shared device (owners always can); Viewers and Operators see the device but cannot connect
+  as it. The access token is not stored here: it is fetched from IoT Platform every time you connect, so the profile keeps working
+  after the token is regenerated.</p>
+<p class="alert alert-warning small">The profile shares its identity with the real device. Everything you publish is accepted by IoT Platform
+  as if the device sent it: it appears on the dashboard, can trigger rules and is kept in the history.</p>
+
+<h3 id="device-topics">Device topics</h3>
+<p>On the connection page, the <em>Device topics</em> buttons fill the Publish card with a topic and an example payload:</p>
+<table class="table table-sm">
+  <thead><tr><th>Button</th><th>Topic</th><th>What IoT Platform does with it</th></tr></thead>
+  <tbody>
+    <tr><td>Telemetry</td><td><code>…/telemetry</code></td><td>stores the values of the device's variables</td></tr>
+    <tr><td>Online</td><td><code>…/status</code></td><td>shows the device online or offline</td></tr>
+    <tr><td>Firmware</td><td><code>…/firmware</code></td><td>records version, board and MAC address</td></tr>
+    <tr><td>Command response</td><td><code>…/commands/&lt;id&gt;/response</code></td><td>completes a command (replace <code>&lt;id&gt;</code>)</td></tr>
+    <tr><td>Rule ack</td><td><code>…/rules/&lt;id&gt;/ack</code></td><td>confirms a rule JSON received from <em>Publish to devices</em></td></tr>
+  </tbody>
+</table>
+
+<h2 id="sandbox">The MQTT sandbox</h2>
+<p>The sandbox is a personal MQTT account on the IoT Platform broker, for practising without a device. Create it on IoT Platform
+  (<em>Profile → MQTT sandbox</em>), then come back to <em>From IoT Platform</em> and choose <em>Create connection</em> in the sandbox card.</p>
+<table class="table table-sm">
+  <thead><tr><th>Topics</th><th>Who</th></tr></thead>
+  <tbody>
+    <tr><td><code>sandbox/&lt;your username&gt;/#</code></td><td>only you</td></tr>
+    <tr><td><code>sandbox/public/#</code></td><td>shared by every sandbox user</td></tr>
+  </tbody>
+</table>
+<p>The sandbox password is not stored here; it is fetched from IoT Platform on every connect. In a sandbox profile, topics may use
+  <code>{sandbox}</code>, which becomes <code>sandbox/&lt;your username&gt;</code>. The <em>Sandbox topics</em> buttons fill the Publish card with
+  examples. Messages in the sandbox are not stored by IoT Platform and do not appear on dashboards.</p>

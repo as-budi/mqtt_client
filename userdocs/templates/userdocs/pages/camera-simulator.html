@@ -1,0 +1,46 @@
+<p><em>Simulate a camera (ESP32-CAM)</em> in the <em>Behave like the device</em> part makes this page act like the ESP32-CAM template of IoT Platform.
+It is switched on automatically when the device's board on IoT Platform is ESP32-CAM, and works for any device you connect as.</p>
+
+<h2 id="how-it-works">How it works</h2>
+<ul>
+  <li>A <code>capture</code> command (from <em>Capture now</em> on IoT Platform, or a rule's <em>Capture snapshot</em> action) is answered with a picture:
+    the page draws it, uploads it, then replies <code>{"success": true, "snapshot": &lt;id&gt;, "size": &lt;bytes&gt;}</code>.</li>
+  <li>Pictures are <strong>not sent over MQTT</strong> (the broker accepts small messages only). The page uploads them to this server, which forwards
+    them to IoT Platform's snapshot address for the device, exactly like the ESP32-CAM does over HTTP.</li>
+  <li><em>Every N s</em> takes a picture regularly (0 = only on request, at least 2 s). It is also set by the requested state
+    <code>snapshot_interval</code>.</li>
+  <li><em>Capture &amp; upload now</em> sends one picture right away, as if a button on the device were pressed.</li>
+  <li>The last picture, the result of the upload and the previous results are shown in the panel, with a link to the device's snapshots on
+    IoT Platform.</li>
+</ul>
+
+<h2 id="sources">Picture sources</h2>
+<table class="table table-sm">
+  <thead><tr><th>Source</th><th>Picture</th></tr></thead>
+  <tbody>
+    <tr><td>Test pattern</td><td>a coloured pattern with the time, the device name and the command number</td></tr>
+    <tr><td>Image files</td><td>images you choose, used in turn; they stay in your browser</td></tr>
+    <tr><td>Webcam</td><td>your computer's camera. The browser asks for permission; the camera stays on only while this source is chosen</td></tr>
+  </tbody>
+</table>
+
+<h2 id="settings">Picture settings</h2>
+<p>Like on the ESP32-CAM, the requested states <code>framesize</code> (size: 5 = QVGA 320×240, 8 = VGA 640×480, 9 = SVGA 800×600 … 13 = UXGA
+  1600×1200), <code>quality</code> (10 = best … 63 = smallest) and <code>flash</code> (brighter picture) are used for the next pictures and reported back.
+  Pictures larger than about 500 KB are compressed more until they fit.</p>
+
+<h2 id="faults">Simulating problems</h2>
+<table class="table table-sm">
+  <thead><tr><th>Fault</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Camera error</td><td>nothing is uploaded; the command is answered with <code>"success": false</code></td></tr>
+    <tr><td>Not a JPEG</td><td>a PNG is uploaded; IoT Platform refuses it (415)</td></tr>
+    <tr><td>Too large</td><td>a picture larger than IoT Platform's limit; refused (413)</td></tr>
+    <tr><td>No answer</td><td>the picture is uploaded, but the command is not answered, so it becomes <em>Expired</em> on IoT Platform</td></tr>
+  </tbody>
+</table>
+
+<h2 id="limits">Limits</h2>
+<p>This app accepts pictures up to {{ snapshot.max_kb }} KB{% if snapshot.per_minute %} and at most {{ snapshot.per_minute }} pictures per minute per user{% endif %}.
+  IoT Platform has its own limits (by default 512 KB per picture and one regular picture every 2 seconds); its answers, such as 413 or 429,
+  are shown in the panel.</p>

@@ -1,0 +1,72 @@
+<p>A <strong>connection profile</strong> keeps everything needed to reach one broker. Profiles are listed on
+<strong>Connections</strong>, with <em>Open</em>, <em>Edit</em>, <em>Duplicate</em> and <em>Delete</em>.</p>
+
+<h2 id="new-connection">Creating a connection</h2>
+<ul>
+  <li><strong>New connection → a ready-made broker</strong> fills in the address of a public test broker
+    ({% for broker in public_brokers %}<code>{{ broker.host }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}){% if platform_ws %}
+    or of the IoT Platform broker (<code>{{ platform_ws }}</code>){% endif %}. You can change anything before saving.</li>
+  <li><strong>New connection</strong> (or <em>Others (any broker)</em> in its list) for any other broker.</li>
+  <li><strong>From IoT Platform</strong> for one of your devices or your sandbox account
+    (<a href="{% url 'userdocs:page' 'platform-devices' %}">next chapter</a>).</li>
+</ul>
+<p>Each profile has a name (unique in your account) and a colour, shown as a stripe on its card and page.</p>
+
+<h2 id="address">Broker address</h2>
+<table class="table table-sm">
+  <thead><tr><th>Protocol</th><th>Default port</th><th>Route</th><th>Typical use</th></tr></thead>
+  <tbody>
+    <tr><td><code>wss://</code> WebSocket over TLS</td><td>443</td><td>Direct</td><td>IoT Platform broker, public brokers (often port 8084, 8884 or 8081)</td></tr>
+    <tr><td><code>ws://</code> WebSocket</td><td>80</td><td>Direct</td><td>a broker on your own network, unencrypted</td></tr>
+    <tr><td><code>mqtts://</code> TCP over TLS</td><td>8883</td><td>Relay</td><td>brokers without a WebSocket port</td></tr>
+    <tr><td><code>mqtt://</code> TCP</td><td>1883</td><td>Relay</td><td>Mosquitto with its standard settings</td></tr>
+  </tbody>
+</table>
+<p><em>Host</em> is only the name or IP address (no <code>wss://</code> in front). <em>WebSocket path</em> (only for <code>ws</code> and
+  <code>wss</code>) is usually <code>/mqtt</code>; some brokers use <code>/</code>. An empty port means the default of the protocol.</p>
+<p>A page served over <code>https://</code> may not open <code>ws://</code> addresses on the internet: browsers block unencrypted
+  WebSockets from secure pages. Use <code>wss://</code>, or <code>mqtt://</code> through the relay.</p>
+
+<h2 id="relay">Direct and Relay</h2>
+<p>A browser can only open WebSocket connections. <strong>Direct</strong> profiles (<code>ws</code>, <code>wss</code>) connect from your browser
+  straight to the broker. <strong>Relay</strong> profiles (<code>mqtt</code>, <code>mqtts</code>) go through the relay on this server, which only
+  passes the bytes on; MQTT itself still runs in your browser, so every feature works the same.</p>
+{% if relay.enabled %}
+<ul>
+  <li>Allowed broker ports: {% for port in relay.ports %}<code>{{ port }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}.
+    Addresses in private networks (<code>10.x</code>, <code>192.168.x</code>, <code>localhost</code>, …) cannot be reached from the server.</li>
+  <li>At most {{ relay.per_user }} relay connections at a time per user, about {{ relay.rate_kb }} KB/s in each direction. A connection
+    is closed after {{ relay.idle_minutes }} minutes without traffic, and after {{ relay.max_hours }} hours in any case.</li>
+  <li>The relay sees the bytes it forwards, including the password in the connect packet, but it never stores or logs them. For
+    the IoT Platform broker, the Direct route (<code>wss://</code>) is preferred.</li>
+</ul>
+{% else %}
+<p class="text-muted">This server has no relay: only <code>ws://</code> and <code>wss://</code> brokers can be used.</p>
+{% endif %}
+
+<h2 id="login">Login and session</h2>
+<table class="table table-sm">
+  <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>Client ID prefix</td><td>a random part is added on every connect (default prefix <code>mqttc-</code>)</td></tr>
+    <tr><td>Username</td><td>when set, the connection page asks for the password; it is never sent to this server. <em>Remember here</em> keeps it in this browser only</td></tr>
+    <tr><td>MQTT version</td><td>3.1.1 (default) or 5.0</td></tr>
+    <tr><td>Keep alive (s)</td><td>default 60</td></tr>
+    <tr><td>Clean start</td><td>start a new session each time (default on)</td></tr>
+    <tr><td>Last Will</td><td>topic, payload, QoS and retain of the message the broker publishes if the connection drops</td></tr>
+  </tbody>
+</table>
+
+<h2 id="subscriptions">Saved subscriptions</h2>
+<p>A profile can keep topic filters with a QoS and a colour. They are subscribed automatically on every connect. A subscription
+  can be <em>muted</em>: it stays subscribed but its messages are hidden from the list. Change them in the profile form, or
+  add and remove them on the connection page for that visit only.</p>
+
+<h2 id="certificates">Certificates</h2>
+<ul>
+  <li><strong><code>mqtts://</code></strong>: the relay checks the broker's certificate against the usual public authorities. For a broker with a
+    self-signed certificate or a campus CA, paste the <strong>CA certificate</strong> (PEM, starting with
+    <code>-----BEGIN CERTIFICATE-----</code>) in the profile. Never paste a private key; the form refuses it.</li>
+  <li><strong><code>wss://</code></strong>: your browser checks the certificate. For a self-signed broker, open <code>https://host:port</code> once and
+    accept the certificate, or install the CA on your computer.</li>
+</ul>

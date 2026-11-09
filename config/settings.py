@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "accounts",      # pengguna (dari IoT Platform), login OpenID Connect, token platform
     "connections",   # profil koneksi broker MQTT dan langganan tersimpan
     "launcher",      # perintah manage.py runall: web + relay dari satu terminal
+    "userdocs",      # dokumentasi pengguna /docs/ (tahap M13), sama dengan IoT Platform
 ]
 
 MIDDLEWARE = [

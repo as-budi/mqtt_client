@@ -19,6 +19,7 @@
     <a class="btn btn-primary btn-lg" href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in with IoT Platform</a>
     <a class="btn btn-outline-secondary btn-lg" href="{% url 'accounts:login' %}?signup=1">Create an account</a>
   </div>
-  <p class="small text-muted mt-4 mb-0">You sign in on IoT Platform; this app never sees your password.</p>
+  <p class="small text-muted mt-4 mb-0">You sign in on IoT Platform; this app never sees your password.
+    <a href="{% url 'userdocs:index' %}">Read the documentation</a>.</p>
 </div>
 {% endblock %}

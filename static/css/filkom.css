@@ -27,6 +27,7 @@ html[data-ui="filkom"][data-bs-theme="light"] {
   --app-accent: var(--fk-orange-text);
   --app-accent-soft: rgba(251, 147, 55, 0.16);
   --app-nav-bg: var(--fk-header);
+  --app-surface-2: #f1f3f7;
 
   --bs-body-font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
   --bs-body-color: #2b3445;
@@ -55,6 +56,7 @@ html[data-ui="filkom"][data-bs-theme="dark"] {
   --app-accent: var(--fk-orange);
   --app-accent-soft: rgba(251, 147, 55, 0.18);
   --app-nav-bg: var(--fk-header);
+  --app-surface-2: #263245;
 
   --bs-body-color: #dbe1ea;
   --bs-body-bg: #1f2938;
@@ -82,8 +84,17 @@ html[data-ui="filkom"] .app-topbar {
   box-shadow: inset 0 -6px 0 var(--fk-title-bar);    /* pita #2D3A50 di bawah bilah atas */
   padding-bottom: calc(0.6rem + 6px);
 }
-html[data-ui="filkom"] .app-brand { color: #fff; text-transform: uppercase; letter-spacing: 0.16em; font-weight: 300; }
-html[data-ui="filkom"] .app-brand span:last-child { font-weight: 700; }
+html[data-ui="filkom"] .app-brand { color: #fff; }
+html[data-ui="filkom"] .app-brand-name { text-transform: uppercase; letter-spacing: 0.12em; }
+html[data-ui="filkom"] .app-brand-sub { color: rgba(255, 255, 255, 0.65); }
+
+/* Kaki halaman: slate gelap seperti bilah atas, sama dengan IoT Platform gaya FILKOM. */
+html[data-ui="filkom"] .app-footer {
+  --app-footer-bg: var(--fk-header);
+  --app-footer-fg: rgba(255, 255, 255, 0.72);
+  --app-footer-line: var(--fk-title-bar);
+  --app-footer-line-w: 4px;
+}
 html[data-ui="filkom"] .brand-mark { color: var(--fk-header); background: var(--fk-orange); }
 html[data-ui="filkom"] .hero .brand-mark { color: #fff; }
 
@@ -95,6 +106,8 @@ html[data-ui="filkom"] .app-topbar .ui-style-switch .btn:hover { color: #fff; }
 html[data-ui="filkom"] .app-topbar .theme-switch .btn.active,
 html[data-ui="filkom"] .app-topbar .ui-style-switch .btn.active { color: var(--fk-orange); background: rgba(251, 147, 55, 0.16); }
 html[data-ui="filkom"] .app-topbar .ui-style-switch { border-color: rgba(255, 255, 255, 0.18); }
+html[data-ui="filkom"] .app-topbar .docs-link { color: rgba(255, 255, 255, 0.75); }
+html[data-ui="filkom"] .app-topbar .docs-link:hover { color: #fff; }
 html[data-ui="filkom"] .app-topbar .btn-outline-secondary { color: #fff; border-color: rgba(255, 255, 255, 0.25); }
 html[data-ui="filkom"] .app-topbar .btn-outline-secondary:hover,
 html[data-ui="filkom"] .app-topbar .btn-outline-secondary.show { background: var(--fk-title-bar); border-color: var(--fk-title-bar); }

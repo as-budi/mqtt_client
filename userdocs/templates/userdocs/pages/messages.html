@@ -1,0 +1,55 @@
+<p>The right side of the connection page shows the traffic of this visit: messages you receive (↓) and publish (↑). Nothing is sent to
+this server; the messages disappear when you close the page, unless you export them.</p>
+
+<h2 id="list">The message list</h2>
+<ul>
+  <li>Newest first, with topic, QoS, size, time and a <em>retained</em> mark. The stripe on the left has the colour of the matching
+    subscription.</li>
+  <li><strong>Filter</strong> (press <kbd>/</kbd> to jump there) matches topic or text; <strong>All / Received / Published</strong> limits the direction.</li>
+  <li><strong>Pause</strong> stops drawing new messages (they are still collected); <strong>Clear</strong> empties the list.</li>
+  <li>Each message has <em>Copy topic</em>, <em>Copy payload</em> and <em>Publish again</em> (fills the Publish card).</li>
+  <li>The page keeps the last 2,000 messages and draws the last 500 that pass the filter.</li>
+</ul>
+<h3 id="payload-views">Payload views</h3>
+<table class="table table-sm">
+  <thead><tr><th>View</th><th>Shows</th></tr></thead>
+  <tbody>
+    <tr><td>Auto</td><td>JSON objects and arrays in the JSON viewer, anything else as text</td></tr>
+    <tr><td>JSON</td><td>the JSON viewer, or <em>(not JSON)</em></td></tr>
+    <tr><td>Text, Hex, Base64</td><td>the raw bytes as text, hexadecimal or base64 (useful for binary payloads)</td></tr>
+  </tbody>
+</table>
+<p>The JSON viewer has line numbers, colours and buttons to fold each object or array; long JSON also gets <em>Expand all</em> /
+  <em>Collapse all</em>. Payloads are always shown as text: HTML or scripts inside a message are never run.</p>
+
+<h2 id="topic-tree">Topic tree</h2>
+<p>The <strong>Topics</strong> tab arranges every topic seen by its levels, with the number of messages and the last value at each leaf.
+  Click a topic to go back to the list filtered on it.</p>
+
+<h2 id="charts">Charts</h2>
+<p>The <strong>Charts</strong> tab draws a small line chart for every series of numbers: a payload that is a number (<code>23.5</code>), or each
+  number or true/false key in a JSON object (<code>{"temperature": 23.5}</code> becomes <em>topic › temperature</em>). Messages you publish are
+  included, so simulated telemetry shows up too. Each chart shows the last value, minimum, maximum and the last 120 points.</p>
+
+<h2 id="mqtt5-properties">MQTT 5 properties</h2>
+<p>For profiles using MQTT 5, the Publish card has an <em>MQTT 5 properties</em> section:</p>
+<table class="table table-sm">
+  <thead><tr><th>Field</th><th>Use</th></tr></thead>
+  <tbody>
+    <tr><td>Content type</td><td>tells receivers the payload format, e.g. <code>application/json</code></td></tr>
+    <tr><td>Expiry (s)</td><td>the broker drops the message (also a retained one) after this many seconds</td></tr>
+    <tr><td>Response topic</td><td>request/response: the receiver answers on this topic</td></tr>
+    <tr><td>User properties</td><td>free <code>key=value</code> pairs, one per line</td></tr>
+  </tbody>
+</table>
+<p>Properties of received messages are shown in the message's info line.</p>
+
+<h2 id="export">Export</h2>
+<table class="table table-sm">
+  <thead><tr><th>Format</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td>JSON</td><td>a list of <code>{time, direction, topic, qos, retain, payload, encoding, properties}</code></td></tr>
+    <tr><td>CSV (Excel)</td><td>columns <code>time, direction, topic, qos, retain, payload, encoding</code>; opens correctly in Excel</td></tr>
+  </tbody>
+</table>
+<p><code>encoding</code> is <code>utf-8</code> for text, or <code>base64</code> for binary payloads (the payload is then written in base64).</p>

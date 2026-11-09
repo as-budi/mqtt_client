@@ -1,0 +1,30 @@
+<p>The MQTT Client has no accounts or passwords of its own. You sign in with your
+<a href="{{ platform_url }}/" target="_blank" rel="noopener">IoT Platform</a> account; IoT Platform checks your password, and this app
+never sees it.</p>
+
+<h2 id="signing-in">Signing in</h2>
+<ol>
+  <li>Press <em>Sign in with IoT Platform</em> on the home page. You go to IoT Platform's login page (or straight back, if you are already
+    logged in there).</li>
+  <li>The first time, IoT Platform shows what this app may do: read your name and email, list your devices (and, for devices you may
+    edit, their access tokens), and use your MQTT sandbox account. Choose <em>Allow</em>.</li>
+  <li>You come back to <strong>Connections</strong>.</li>
+</ol>
+<p>No account yet? Use <em>Create an account</em>: it opens IoT Platform's sign-up page, and you come back here after activating the account.</p>
+<p>After a new feature is added, IoT Platform may ask again for a new permission (for example for the MQTT sandbox). When a page says
+  <em>Sign in again to allow</em>, sign out and sign in again.</p>
+
+<h2 id="signing-out">Signing out</h2>
+<ul>
+  <li><strong>Sign out</strong> (account menu, top right) ends your session in this app.</li>
+  <li><strong>Sign out of IoT Platform too</strong> also logs you out of IoT Platform in this browser.</li>
+  <li>To remove this app's access completely, go to IoT Platform → <em>Profile → Connected apps</em> and revoke it. You are then signed out
+    here as well within about ten minutes.</li>
+</ul>
+
+<h2 id="display">Style and light/dark mode</h2>
+<ul>
+  {% if ui_style_selectable %}<li><strong>Standard / FILKOM</strong> (top bar; on a phone in the account menu): Standard uses the same blue as
+    IoT Platform, FILKOM the colours of FILKOM Apps. The choice is kept in your account.</li>{% endif %}
+  <li><strong>Light, dark, or follow the system</strong>: the three buttons in the top bar. This choice is kept in your browser.</li>
+</ul>

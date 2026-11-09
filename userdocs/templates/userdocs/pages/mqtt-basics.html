@@ -1,0 +1,51 @@
+<p>MQTT is a small publish/subscribe protocol used by many IoT devices. Devices and apps never talk to each other directly:
+everyone connects to a <strong>broker</strong>, which forwards each message to whoever subscribed to its topic.</p>
+
+<h2 id="topics">Topics</h2>
+<p>A topic is a text path with levels separated by <code>/</code>, for example <code>lab/room1/temperature</code>. Topics are
+  case sensitive and need no registration: publishing to a new topic simply creates it.</p>
+<h3 id="wildcards">Wildcards</h3>
+<table class="table table-sm">
+  <thead><tr><th>Filter</th><th>Matches</th><th>Does not match</th></tr></thead>
+  <tbody>
+    <tr><td><code>lab/+/temperature</code></td><td><code>lab/room1/temperature</code>, <code>lab/room2/temperature</code></td><td><code>lab/room1/a/temperature</code></td></tr>
+    <tr><td><code>lab/#</code></td><td><code>lab</code>, <code>lab/room1</code>, <code>lab/room1/temperature</code></td><td><code>labs/room1</code></td></tr>
+  </tbody>
+</table>
+<p>Wildcards are only for subscribing. <code>+</code> stands for exactly one level, <code>#</code> for any number of levels
+  and must be last. You cannot publish to a topic that contains them.</p>
+
+<h2 id="qos">Quality of service (QoS)</h2>
+<table class="table table-sm">
+  <thead><tr><th>QoS</th><th>Meaning</th><th>Typical use</th></tr></thead>
+  <tbody>
+    <tr><td>0</td><td>at most once: sent once, may be lost</td><td>frequent sensor values</td></tr>
+    <tr><td>1</td><td>at least once: repeated until confirmed, may arrive twice</td><td>commands, alarms</td></tr>
+    <tr><td>2</td><td>exactly once: a longer handshake</td><td>rarely needed; not every broker supports it</td></tr>
+  </tbody>
+</table>
+<p>A message is delivered with the lower of the publisher's and the subscriber's QoS.</p>
+
+<h2 id="retained">Retained messages</h2>
+<p>With <em>Retain</em>, the broker keeps the last message of a topic and gives it to every new subscriber at once, e.g. the
+  current state of a lamp. Retained messages are marked in the message list. To remove one, publish an empty retained
+  message to the same topic (<em>Clear retained</em> in the Publish card).</p>
+
+<h2 id="session">Client ID, keep alive and clean start</h2>
+<ul>
+  <li><strong>Client ID</strong>: each connection to a broker needs a unique ID; a second connection with the same ID pushes the first
+    one out. This app adds a random ending to the prefix of your profile every time you connect, so two tabs do not collide.</li>
+  <li><strong>Keep alive</strong>: when nothing is sent for this many seconds, the client sends a small ping so the broker knows it is
+    still there.</li>
+  <li><strong>Clean start</strong>: start with a new session every time. Without it, the broker may keep your subscriptions and queued
+    QoS 1/2 messages while you are away.</li>
+</ul>
+
+<h2 id="last-will">Last Will</h2>
+<p>A message the broker publishes for you when your connection is lost without a proper disconnect, e.g.
+  <code>offline</code> to <code>lab/node1/status</code> (often retained). Set it in the connection profile.</p>
+
+<h2 id="mqtt5">MQTT 3.1.1 and MQTT 5</h2>
+<p>Both versions work with most brokers. MQTT 5 adds properties such as message expiry, content type, response topic and
+  user properties (see <a href="{% url 'userdocs:page' 'messages' %}#mqtt5-properties">Reading messages</a>). Choose the version
+  in the connection profile.</p>

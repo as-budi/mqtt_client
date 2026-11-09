@@ -61,3 +61,17 @@ Pilihan di MQTT Client terpisah dari pilihan di IoT Platform.
 ```bash
 sudo /srv/mqttc/app/deploy/scripts/update.sh     # migrasi accounts 0002, collectstatic, restart
 ```
+
+## Tambahan: identitas laboratorium dan kaki halaman
+
+Sama dengan IoT Platform, di kedua gaya:
+
+- **Nama aplikasi** di bilah atas: logo, **MQTT Client**, dan di bawahnya *Robotic and Embedded System
+  Laboratory* (huruf besar kecil, `templates/includes/brand.html`, kelas `.app-brand-name` / `.app-brand-sub`).
+  Gaya FILKOM: nama huruf besar berjarak, putih.
+- **Kaki halaman** di setiap halaman, rata kanan (layar kecil: kiri):
+  *© Computer Engineering Study Program - Faculty of Computer Science - Universitas Brawijaya*
+  (`templates/base.html`, `.app-footer`). Selalu di bawah layar walau isi halaman pendek. Gaya Standard:
+  warna kartu, garis tipis; gaya FILKOM: slate gelap `#232E40` dengan garis `#2D3A50`.
+
+Tes: `accounts/tests_ui_style.py` (`IdentityTests`).

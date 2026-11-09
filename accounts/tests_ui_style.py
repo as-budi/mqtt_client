@@ -53,3 +53,16 @@ class UiStyleTests(TestCase):
         self.client.post(reverse("accounts:ui_style"), {"style": "standard"})
         self.budi.refresh_from_db()
         self.assertEqual(self.budi.ui_style, "filkom")       # tidak berubah saat dikunci
+
+
+class IdentityTests(TestCase):
+    """Nama aplikasi dengan identitas laboratorium dan kaki halaman, seperti IoT Platform."""
+
+    def test_brand_and_footer_on_every_page(self):
+        for style in ("standard", "filkom"):
+            with self.settings(UI_STYLE=style):
+                page = self.client.get(reverse("accounts:welcome"))
+                self.assertContains(page, '<span class="app-brand-sub">Robotic and Embedded System Laboratory</span>',
+                                    html=False)
+                self.assertContains(page, "&copy; Computer Engineering Study Program - Faculty of Computer Science"
+                                          " - Universitas Brawijaya")

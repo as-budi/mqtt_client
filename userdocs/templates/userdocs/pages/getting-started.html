@@ -1,0 +1,46 @@
+<p>The MQTT Client is a web app for testing MQTT from your browser. It belongs to
+<a href="{{ platform_url }}/" target="_blank" rel="noopener">IoT Platform</a>: you sign in with your IoT Platform
+account, and you can connect as one of your devices to try dashboards, rules and commands without an ESP32.
+Nothing needs to be installed.</p>
+
+<h2 id="what-you-can-do">What you can do</h2>
+<ul>
+  <li>Connect to any MQTT broker: brokers with a WebSocket port (<code>wss://</code>, <code>ws://</code>) directly from the
+    browser, and ordinary brokers (<code>mqtt://</code> port 1883, <code>mqtts://</code> port 8883) through a relay on this server.</li>
+  <li>Subscribe to topics, publish messages, and read them in a list, a topic tree or small charts.</li>
+  <li>Keep connection profiles, subscriptions and frequently used messages in your account.</li>
+  <li>Behave like an IoT Platform device: send simulated sensor data, answer commands, report requested states,
+    simulate firmware updates and camera pictures.</li>
+</ul>
+
+<h2 id="first-connection">Your first connection</h2>
+<ol>
+  <li><strong>Sign in</strong> on the home page with <em>Sign in with IoT Platform</em>. The first time, IoT Platform asks
+    you to allow this app to read your devices (see <a href="{% url 'userdocs:page' 'account' %}">Your account</a>).</li>
+  <li>On <strong>Connections</strong>, open <em>New connection</em> and choose a ready-made broker, for example
+    <em>EMQX public broker</em>, then <em>Create</em>.</li>
+  <li><strong>Open</strong> the connection and press <strong>Connect</strong>. The status turns <em>Connected</em>.</li>
+  <li>Under <em>Subscriptions</em>, subscribe to a topic of your own, e.g. <code>filkom/yourname/#</code>.</li>
+  <li>Under <em>Publish</em>, send <code>{"temperature": 25.1}</code> to <code>filkom/yourname/room</code>. The message appears twice
+    on the right: once going out (↑) and once coming back from the broker (↓).</li>
+</ol>
+<p class="small text-muted">Public brokers are open to everyone: anyone can read and write any topic. Use a topic name nobody
+  else is likely to use, and never send passwords or personal data there.</p>
+
+<h2 id="with-iot-platform">Working with IoT Platform</h2>
+<p>To test a device of yours, go to <strong>Connections → From IoT Platform</strong> and choose <em>Create connection</em>
+  next to the device. The new profile logs in as that device, with its topics already filled in. The data you publish
+  appears on IoT Platform exactly as if the real device had sent it. See
+  <a href="{% url 'userdocs:page' 'platform-devices' %}">IoT Platform devices and sandbox</a> and
+  <a href="{% url 'userdocs:page' 'device-simulator' %}">Behaving like a device</a>.</p>
+
+<h2 id="where-data-lives">Where your data lives</h2>
+<table class="table table-sm">
+  <thead><tr><th>What</th><th>Kept</th></tr></thead>
+  <tbody>
+    <tr><td>Connection profiles, saved subscriptions, saved messages, style</td><td>in your account on this server</td></tr>
+    <tr><td>Messages you send and receive</td><td>only in the open browser tab; gone when you close it (use <em>Export</em> to keep them)</td></tr>
+    <tr><td>Broker passwords</td><td>never on the server; typed in the page, or remembered in this browser if you tick <em>Remember here</em></td></tr>
+    <tr><td>Device access tokens</td><td>never stored; fetched from IoT Platform each time you connect</td></tr>
+  </tbody>
+</table>

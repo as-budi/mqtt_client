@@ -1,0 +1,28 @@
+{% extends "userdocs/layout.html" %}
+{% block title %}Documentation · MQTT Client{% endblock %}
+
+{% block doc %}
+<p class="lead">How to use the MQTT Client: connecting to brokers from your browser, subscribing and publishing,
+  reading messages, and simulating IoT Platform devices without hardware.</p>
+{% if not user.is_authenticated %}
+<div class="alert alert-light border small">
+  You can read everything here without signing in. <a href="{% url 'accounts:login' %}">Sign in with IoT Platform</a>
+  or <a href="{% url 'accounts:login' %}?signup=1">create an account</a> to try it.
+</div>
+{% endif %}
+{% for section, items in sections %}
+<h2 class="h5 mt-4">{{ section }}</h2>
+<div class="row g-3">
+  {% for item in items %}
+  <div class="col-md-6">
+    <a class="card h-100 shadow-sm text-reset text-decoration-none docs-card" href="{% url 'userdocs:page' item.slug %}">
+      <div class="card-body">
+        <div class="fw-semibold mb-1">{{ item.title }}</div>
+        <div class="small text-muted">{{ item.summary }}</div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

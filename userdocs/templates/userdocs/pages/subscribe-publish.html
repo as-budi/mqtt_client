@@ -1,0 +1,63 @@
+<p>Everything on the connection page runs in your browser. Press <strong>Connect</strong> first; the status in the header shows
+<em>Connecting…</em>, <em>Connected</em>, <em>Reconnecting…</em> or <em>Not connected</em> with the reason.</p>
+
+<h2 id="connecting">Connecting and reconnecting</h2>
+<ul>
+  <li>When the connection drops, the page tries again after 1, 2, 5, 10, 20 and then every 30 seconds, and subscribes again.</li>
+  <li>It does <strong>not</strong> retry when trying again cannot help: wrong username or password, not authorised, an address the relay
+    may not reach, or a certificate problem. The reason is shown above the page.</li>
+  <li><em>Disconnect</em> closes the connection; closing the tab does the same.</li>
+</ul>
+
+<h2 id="subscriptions">Subscriptions</h2>
+<p>Type a topic filter (wildcards allowed), choose a QoS and press <em>Subscribe</em>. Each subscription shows its state:</p>
+<table class="table table-sm">
+  <thead><tr><th>Mark</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>✓</td><td>accepted by the broker</td></tr>
+    <tr><td>…</td><td>waiting (not connected yet)</td></tr>
+    <tr><td><em>refused</em></td><td>the broker does not allow this filter for your login (for example another device's topic on IoT Platform)</td></tr>
+  </tbody>
+</table>
+<p><em>mute</em> hides the messages of a subscription (they are still received; <em>show</em> brings them back); ✕ unsubscribes.</p>
+
+<h2 id="publish">Publishing</h2>
+<ol>
+  <li>Type the topic (suggestions come from your history and the device topics). Wildcards are not allowed.</li>
+  <li>Write the payload. Choose <strong>Text</strong> or <strong>JSON</strong>: JSON is checked before sending, and <em>Format</em> indents it.</li>
+  <li>Choose QoS and <em>Retain</em>, then <em>Publish</em> or press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> (<kbd>⌘</kbd>+<kbd>Enter</kbd> on a Mac).</li>
+</ol>
+<h3 id="json-editor">The JSON editor</h3>
+<p>With the JSON format, the payload box works like a small code editor: line numbers, colours for keys and values, the line of a
+  JSON error marked in red, <kbd>Tab</kbd> inserts two spaces and <kbd>Enter</kbd> keeps the indentation. <em>Preview</em> shows the result with
+  placeholders filled in, folded like the message viewer.</p>
+
+<h2 id="placeholders">Placeholders</h2>
+<p>Placeholders in the topic or payload are replaced every time a message is sent:</p>
+<table class="table table-sm">
+  <thead><tr><th>Placeholder</th><th>Example result</th></tr></thead>
+  <tbody>
+    <tr><td><code>{% templatetag openvariable %}counter}}</code></td><td>1, 2, 3, … (messages sent from this page)</td></tr>
+    <tr><td><code>{% templatetag openvariable %}timestamp}}</code></td><td><code>2026-10-22T07:57:40.302Z</code></td></tr>
+    <tr><td><code>{% templatetag openvariable %}unix}}</code></td><td><code>1792655860</code> (seconds since 1970)</td></tr>
+    <tr><td><code>{% templatetag openvariable %}random:20:30}}</code></td><td><code>27.86</code> (two decimals)</td></tr>
+    <tr><td><code>{% templatetag openvariable %}int:0:100}}</code></td><td><code>42</code></td></tr>
+    <tr><td><code>{% templatetag openvariable %}bool}}</code></td><td><code>true</code> or <code>false</code></td></tr>
+  </tbody>
+</table>
+<p>Example: <code>{"temperature": {% templatetag openvariable %}random:20:30}}, "n": {% templatetag openvariable %}counter}}}</code>. A placeholder without quotes counts as a number
+  when the JSON is checked.</p>
+
+<h2 id="repeat">Publishing repeatedly</h2>
+<p>In the <em>Automation</em> card, <em>Publish the message above every N s → Start</em> sends the Publish card's message again and again
+  (at least every second) until <em>Stop</em>, until the connection is lost, or until you leave the page. Placeholders change each time, so
+  this is an easy sensor simulator.</p>
+
+<h2 id="saved-history">History, saved messages and retained messages</h2>
+<ul>
+  <li><strong>History</strong>: the last 20 messages you published, kept in this browser.</li>
+  <li><strong>Save</strong> / <strong>Saved</strong>: messages kept in your account (at most {{ max_saved }}), for this connection or, with
+    <em>Available in all my connections</em>, for every connection.</li>
+  <li><strong>Clear retained</strong>: publishes an empty retained message to the topic, which removes the retained message on the broker
+    (you are asked to confirm).</li>
+</ul>

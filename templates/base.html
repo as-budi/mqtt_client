@@ -11,6 +11,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}MQTT Client{% endblock %}</title>
+  {# Ikon tab browser = logo MQTT Client, warnanya mengikuti gaya (Standard biru-hijau, FILKOM oranye). #}
+  {% with icon_style=ui_style|default:"standard" %}
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon-'|add:icon_style|add:'.svg' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-'|add:icon_style|add:'-32.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon-'|add:icon_style|add:'.png' %}">
+  {% endwith %}
   {# Tema dipasang sedini mungkin supaya halaman tidak "berkedip". #}
   <script src="{% static 'js/theme.js' %}"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +35,11 @@
   <div class="container-xl d-flex align-items-center gap-3">
     <a class="app-brand me-auto" href="{% if user.is_authenticated %}{% url 'connections:list' %}{% else %}{% url 'accounts:welcome' %}{% endif %}">
       {% include "includes/brand.html" %}
+    </a>
+    {# Dokumentasi pengguna (tahap M13): untuk semua pengunjung. #}
+    <a class="docs-link" href="{% url 'userdocs:index' %}" title="Documentation">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span class="d-none d-md-inline">Documentation</span>
     </a>
     {% if user.is_authenticated %}{% include "includes/ui_style_switch.html" %}{% endif %}
     {% include "includes/theme_switch.html" %}
@@ -78,10 +89,17 @@
   </div>
 </header>
 
-<main class="container-xl py-4">
+<main class="container-xl py-4 app-main">
   {% include "includes/messages.html" %}
   {% block content %}{% endblock %}
 </main>
+
+{# Kaki halaman, sama dengan IoT Platform (templates/includes/ui_footer.html di repo platform). #}
+<footer class="app-footer">
+  <div class="container-xl d-flex">
+    <span class="ms-auto">&copy; Computer Engineering Study Program - Faculty of Computer Science - Universitas Brawijaya</span>
+  </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% block extra_js %}{% endblock %}
