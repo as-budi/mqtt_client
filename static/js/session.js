@@ -993,10 +993,12 @@
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  // Laporan firmware {"version", "board", "mac"}, sama dengan template ESP32 platform (tahap 24).
+  // Laporan firmware {"title", "version", "board", "mac"}, sama dengan template ESP32 platform
+  // (tahap 24; "title" = nama firmware, karena platform mengenali firmware dari nama + versi).
   // MAC dari server (connections/session.py): milik device di platform, atau MAC tiruan yang tetap.
   function firmwareReport(version) {
     const body = {
+      title: (deviceInfo && deviceInfo.firmware_title) || "MQTT Client simulator",
       version: version || (deviceInfo && deviceInfo.firmware) || "1.0.0",
       board: (deviceInfo && deviceInfo.board) || "sim",
     };
@@ -1008,7 +1010,14 @@
   async function simulateOta(responseTopic, params) {
     const report = (body) => publish(deviceTopics.firmware, JSON.stringify(body), 0, false, { quiet: true, properties: null });
     const update = params.update;
-    publish(responseTopic, JSON.stringify({ success: true, message: "Update accepted" }), 1, false, { quiet: true, properties: null });
+    const answer = (body) => publish(responseTopic, JSON.stringify(body), 1, false, { quiet: true, properties: null });
+    // Seperti template ESP32: nama DAN versi sama = sudah berjalan. Versi sama dari program lain tetap dipasang.
+    const running = firmwareReport();
+    if (params.version === running.version && String(params.title || "").toLowerCase() === running.title.toLowerCase()) {
+      answer({ success: false, error: `Already running ${running.title} ${running.version}` });
+      return;
+    }
+    answer({ success: true, message: "Update accepted" });
     const result = $("auto-ota-result").value;
     for (const progress of [0, 25, 50, 75, 100]) {
       await sleep(500);
@@ -1020,8 +1029,11 @@
     }
     for (const state of ["DOWNLOADED", "VERIFIED", "UPDATING"]) { await sleep(400); report({ update, state }); }
     await sleep(1000);   // "restart"
-    if (deviceInfo) deviceInfo.firmware = params.version || deviceInfo.firmware;
-    report(firmwareReport(params.version));   // firmware "baru" melapor versi, board, dan MAC
+    if (deviceInfo) {
+      deviceInfo.firmware = params.version || deviceInfo.firmware;
+      deviceInfo.firmware_title = params.title || deviceInfo.firmware_title;
+    }
+    report(firmwareReport(params.version));   // firmware "baru" melapor nama, versi, board, dan MAC
   }
 
   // ================================================================ tahap M6

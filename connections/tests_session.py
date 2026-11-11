@@ -94,6 +94,7 @@ class SessionTests(TestCase):
                                                                "firmware_version": "1.2.0", "board": "esp32"}]}
         info = self.connect(self.device).json()["device"]
         self.assertEqual((info["mac"], info["firmware"], info["board"]), ("24:6F:28:AA:BB:CC", "1.2.0", "esp32"))
+        self.assertEqual(info["firmware_title"], "MQTT Client simulator")   # platform belum tahu namanya
 
     @mock.patch("connections.session.platform.api_get")
     def test_connect_as_platform_device_errors(self, api_get):

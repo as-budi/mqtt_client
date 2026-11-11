@@ -39,8 +39,9 @@ this page act like the firmware templates of IoT Platform, so you can try dashbo
 
 <h2 id="firmware-updates">Firmware updates</h2>
 <p>With <em>Simulate firmware updates (OTA)</em>, an <code>ota</code> command is accepted and followed by progress reports on <code>…/firmware</code>, like
-  the ESP32 firmware: <code>DOWNLOADING</code> 0–100 %, <code>DOWNLOADED</code>, <code>VERIFIED</code>, <code>UPDATING</code>, and finally the new version with
-  board and MAC address. Choose <em>Fail</em> to stop at 50 % with <code>FAILED</code>. Start the update from the firmware page of IoT Platform and
+  the ESP32 firmware: <code>DOWNLOADING</code> 0–100 %, <code>DOWNLOADED</code>, <code>VERIFIED</code>, <code>UPDATING</code>, and finally the new firmware name and version with
+  board and MAC address. The simulator reports the name IoT Platform knows for the device (or <em>MQTT Client simulator</em>), and,
+  like the ESP32 firmware, refuses an update with the same name and version. Choose <em>Fail</em> to stop at 50 % with <code>FAILED</code>. Start the update from the firmware page of IoT Platform and
   watch its status there.</p>
 <p>The MAC address is the one IoT Platform knows for the device, or, if it has none yet, a made-up address that stays the same for the
   device (starting with <code>02:</code>).</p>

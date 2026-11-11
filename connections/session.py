@@ -145,6 +145,8 @@ def connect_info(request, pk):
         # Untuk simulator, auto-responder, dan simulasi OTA di halaman koneksi (tahap M5).
         device_info = {"name": device["name"], "board": device.get("board") or "sim",
                        "firmware": device.get("firmware_version") or "1.0.0",
+                       # Nama firmware (platform: nama + versi mengenali firmware); default bila belum ada.
+                       "firmware_title": device.get("firmware_title") or "MQTT Client simulator",
                        "mac": device.get("mac_address") or simulated_mac(token),
                        "variables": device.get("variables", [])}
 
